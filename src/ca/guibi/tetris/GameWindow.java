@@ -1,4 +1,4 @@
-package ca.guibi;
+package ca.guibi.tetris;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -13,7 +13,7 @@ public class GameWindow extends JFrame {
         add(game);
 
         // Window parameters
-        setSize(500, 900);
+        setSize(430, 850);
         setResizable(false);
         setTitle("Tetris");
 

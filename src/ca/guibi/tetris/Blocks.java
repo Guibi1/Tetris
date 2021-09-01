@@ -1,6 +1,6 @@
-package ca.guibi;
+package ca.guibi.tetris;
 
-public class Blocks
+public final class Blocks
 {
     public enum Type {
         I,
@@ -13,13 +13,25 @@ public class Blocks
     }
     
     public enum Color {
-        Cyan,
-        Yellow,
-        Purple,
-        Green,
-        Red,
-        Blue,
-        Orange,
-        None
+        Cyan(java.awt.Color.cyan),
+        Yellow(java.awt.Color.yellow),
+        Purple(java.awt.Color.magenta),
+        Green(java.awt.Color.green),
+        Red(java.awt.Color.red),
+        Blue(java.awt.Color.blue),
+        Orange(java.awt.Color.orange),
+        None(java.awt.Color.black);
+
+        private final java.awt.Color color;
+
+        Color(final java.awt.Color color)
+        {
+            this.color = color;
+        }
+
+        public java.awt.Color getColor()
+        {
+            return color;
+        }
     }
 }

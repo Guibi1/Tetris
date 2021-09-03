@@ -3,6 +3,9 @@ package ca.guibi.tetris;
 import java.awt.Dimension;
 import javax.swing.JPanel;
 import java.util.Arrays;
+import java.util.Random;
+import java.awt.Point;
+import java.lang.Math;
 
 import javax.swing.border.LineBorder;
 import java.awt.Color;
@@ -30,6 +33,8 @@ public class Board extends JPanel {
 
         paused = false;
         score = 0;
+        generateBlock = true;
+        nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length)];
 
         Run();
     }
@@ -40,7 +45,7 @@ public class Board extends JPanel {
         {
             // Checks for completed line
             boolean completedLine = false;
-            for (int i = gameBoard.length - 1; i >= 0; i--)
+            for (int i = boardY - 1; i >= 0; i--)
                 if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
                 {
                     Blocks.Color[] last = new Blocks.Color[10];
@@ -59,12 +64,33 @@ public class Board extends JPanel {
 
             if (!completedLine)
             {
-                
+                // Adds a new block
+
+                // TODO: rotate the block
+                if (generateBlock)
+                {
+                    currentBlock = nextBlock;
+                    currentBlockOffset.setLocation(boardX / 2 - 1, 0);
+
+                    generateBlock = false;
+                    nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length)];
+                }
+
+                // Drags the block down if it can
+                else
+                {
+                    currentBlockOffset.translate(0, 1);
+                    currentBlock.rotateBlock(90);
+
+                    System.out.println("\ntruepoints:");
+                    for (Point p : currentBlock.getPoints())
+                        System.out.println(p);
+                }
             }
     
             try {
                 paintImmediately(getVisibleRect());
-                Thread.sleep(500);
+                Thread.sleep(400);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
@@ -82,33 +108,46 @@ public class Board extends JPanel {
 
         g2D.setStroke(new BasicStroke(strokeSize));
         g2D.setColor(Color.decode("#373D43"));
-        for (int i = 1; i <= gameBoard[0].length; i++)
+        for (int i = 1; i <= boardX; i++)
         {
-            g2D.drawLine(i * width / gameBoard[0].length, 0, i * width / gameBoard[0].length, height);
+            g2D.drawLine(i * width / boardX, 0, i * width / boardX, height);
         }
         
-        for (int i = 1; i <= gameBoard.length; i++)
+        for (int i = 1; i <= boardY; i++)
         {
-            g2D.drawLine(0, i * height / gameBoard.length, width, i * height / gameBoard.length);
+            g2D.drawLine(0, i * height / boardY, width, i * height / boardY);
         }
 
-        for (int i = 0; i < gameBoard.length; i++)
-            for (int j = 0; j < gameBoard[i].length; j++)
+        for (int i = 0; i < boardY; i++)
+            for (int j = 0; j < boardX; j++)
             {
-                if (gameBoard[i][j] != Blocks.Color.None)
+                boolean isCurrentBlock = false;
+                
+                for (Point p : currentBlock.getPoints())
+                    if (p.getX() + currentBlockOffset.getX() == j && p.getY() + currentBlockOffset.getY() == i)
+                        isCurrentBlock = true;
+                
+                if (gameBoard[i][j] != Blocks.Color.None || isCurrentBlock)
                 {
-                    g2D.setColor(gameBoard[i][j].getColor());
+                    g2D.setColor((isCurrentBlock) ? currentBlock.getJavaColor() : gameBoard[i][j].getJavaColor());
                     g2D.fill(new Rectangle2D.Double(
-                        (j * width / gameBoard[i].length) + (strokeSize / 2),
-                        (i * height / gameBoard.length) + (strokeSize / 2),
-                        width / gameBoard[i].length - strokeSize,
-                        height / gameBoard.length - strokeSize
+                        (j * width / boardX) + (strokeSize / 2),
+                        (i * height / boardY) + (strokeSize / 2),
+                        width / boardX - strokeSize,
+                        height / boardY - strokeSize
                     ));
                 }
             }
     }
 
-    private Blocks.Color[][] gameBoard = new Blocks.Color[20][10];
+    int boardX = 10;
+    int boardY = 20;
+    private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
     private boolean paused = false;
     private int score = 0;
+    private Random random = new Random();
+    private boolean generateBlock = true;
+    private Blocks.Type nextBlock = Blocks.Type.I;
+    private Blocks.Type currentBlock = Blocks.Type.I;
+    private Point currentBlockOffset = new Point();
 }

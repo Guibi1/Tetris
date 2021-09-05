@@ -10,11 +10,12 @@ public class GameWindow extends JFrame {
     {
         setLayout(new FlowLayout());
         game = new Board();
+        addKeyListener(game);
         add(game);
 
         // Window parameters
-        setSize(430, 850);
-        setResizable(false);
+        setSize(350, 700);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setTitle("Tetris");
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

@@ -1,6 +1,7 @@
 package ca.guibi.tetris;
 
 import java.awt.Point;
+import java.awt.Dimension;
 
 public final class Blocks
 {
@@ -11,27 +12,98 @@ public final class Blocks
         S(new Point[] { new Point(0, 1), new Point(0, 2), new Point(1, 0), new Point(1, 1) }, Color.Green),
         Z(new Point[] { new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2) }, Color.Red),
         J(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2) }, Color.Blue),
-        L(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0) }, Color.Orange);
+        L(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0) }, Color.Orange),
+        None(new Point[0], Color.None);
 
-        private final Point[] points;
         private final Color color;
+        private final Point[] originalPoints;
+        private Point[] points;
+        private Dimension size;
         private int angle;
 
         Type(Point[] points, Color color)
         {
-            this.points = points;
             this.color = color;
+            this.points = points;
+            size = new Dimension();
             angle = 0;
+            
+            originalPoints = new Point[points.length];
+            for (int i = 0; i< points.length; i++)
+                originalPoints[i] = new Point(points[i].x, points[i].y);
+
+            updateSize();
+        }
+        
+        private void updateSize()
+        {
+            Point min = new Point(0, 0);
+            Point max = new Point(0, 0);
+
+            for (Point p : points)
+            {
+                if (p.x > max.x)
+                    max.x = p.x;
+
+                else if (p.x < min.x)
+                    min.x = p.x;
+
+                if (p.y > max.y)
+                    max.y = p.y;
+                
+                else if (p.y < min.y)
+                    min.y = p.y;
+            }
+
+            size.width = max.x - min.x;
+            size.height = max.y - min.y;
+        }
+
+        private void rotateBlock()
+        {
+            Point origin = new Point(0, 0);
+
+            for (int i = 0; i < originalPoints.length; i++)
+            {
+                int x = (int) Math.round(originalPoints[i].getX() * Math.cos(Math.toRadians(angle)) - originalPoints[i].getY() * Math.sin(Math.toRadians(angle)));
+                int y = (int) Math.round(originalPoints[i].getY() * Math.cos(Math.toRadians(angle)) + originalPoints[i].getX() * Math.sin(Math.toRadians(angle)));
+            
+                points[i].x = x;
+                points[i].y = y;
+
+                if (x < origin.x)
+                    origin.x = points[i].x;
+
+                if (y < origin.y)
+                    origin.y = points[i].y;
+            }
+
+            for (Point p : points)
+            {
+                p.x -= origin.x;
+                p.y -= origin.y;
+            }
+
+            updateSize();
         }
         
         public void rotateBlock(int angle)
         {
             this.angle += angle;
+
+            while (this.angle >= 360)
+                this.angle -= 360;
+
+            while (this.angle <= -360)
+                this.angle += 360;
+
+            rotateBlock();
         }
 
-        public void setAngle(int angle)
+        public void resetAngle()
         {
-            this.angle = angle;
+            angle = 0;
+            rotateBlock();
         }
 
         public int getAngle()
@@ -39,16 +111,14 @@ public final class Blocks
             return angle;
         }
 
+        public Dimension getSize()
+        {
+            return size;
+        }
+
         public Point[] getPoints()
         {
-            Point[] truePoints = new Point[4];
-            
-            for (int i = 0; i < points.length; i++)
-            {
-                truePoints[i] = new Point((int)(points[i].getX() * Math.cos(angle) - points[i].getY() * Math.sin(angle)), (int)(points[i].getY() * Math.cos(angle) + points[i].getX() * Math.sin(angle)));
-            }
-
-            return truePoints;
+            return points;
         }
 
         public Color getColor()

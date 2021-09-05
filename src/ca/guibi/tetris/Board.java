@@ -5,7 +5,8 @@ import javax.swing.JPanel;
 import java.util.Arrays;
 import java.util.Random;
 import java.awt.Point;
-import java.lang.Math;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.border.LineBorder;
 import java.awt.Color;
@@ -14,11 +15,11 @@ import java.awt.Graphics2D;
 import java.awt.BasicStroke;
 import java.awt.geom.Rectangle2D;
 
-public class Board extends JPanel {
+public class Board extends JPanel implements KeyListener {
     Board()
     {
         super();
-        setPreferredSize(new Dimension(400, 800));
+        setPreferredSize(new Dimension(300, 650));
         setBackground(Color.decode("#121417"));
         setBorder(new LineBorder(Color.decode("#373D43"), 2));
 
@@ -34,7 +35,8 @@ public class Board extends JPanel {
         paused = false;
         score = 0;
         generateBlock = true;
-        nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length)];
+        currentBlock = Blocks.Type.None;
+        nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length - 1)];
 
         Run();
     }
@@ -45,7 +47,8 @@ public class Board extends JPanel {
         {
             // Checks for completed line
             boolean completedLine = false;
-            for (int i = boardY - 1; i >= 0; i--)
+            for (int i = boardY - 1; i >= 0;)
+            {
                 if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
                 {
                     Blocks.Color[] last = new Blocks.Color[10];
@@ -59,42 +62,182 @@ public class Board extends JPanel {
                     }
     
                     completedLine = true;
-                    break;
                 }
 
-            if (!completedLine)
+                else i -= 1;
+            }
+
+            if (completedLine)
+                paintImmediately(getVisibleRect());
+
+            else
             {
                 // Adds a new block
-
-                // TODO: rotate the block
                 if (generateBlock)
                 {
-                    currentBlock = nextBlock;
-                    currentBlockOffset.setLocation(boardX / 2 - 1, 0);
-
                     generateBlock = false;
-                    nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length)];
+                    currentBlock = nextBlock;
+                    currentBlock.rotateBlock(random.nextInt(4) * 90);
+                    currentBlockOffset.setLocation((boardX - currentBlock.getSize().width) / 2, 0 - currentBlock.getSize().height);
+                    nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length - 1)];
+                    paintCurrentBlock();
                 }
 
                 // Drags the block down if it can
                 else
                 {
-                    currentBlockOffset.translate(0, 1);
-                    currentBlock.rotateBlock(90);
-
-                    System.out.println("\ntruepoints:");
+                    boolean canFall = true;
                     for (Point p : currentBlock.getPoints())
-                        System.out.println(p);
+                    {
+                        if (currentBlockOffset.y + p.y + 1 < 0)
+                            continue;
+                        
+                        if (currentBlockOffset.y + p.y == boardY - 1 || gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
+                            canFall = false;
+                    }
+
+                    if (canFall)
+                    {
+                        currentBlockOffset.translate(0, 1);
+                        paintCurrentBlock();
+                    }
+                    
+                    else
+                    {
+                        // Check if game is over
+                        for (Point p : currentBlock.getPoints())
+                        {
+                            if (currentBlockOffset.y + p.y < 0)
+                                continue;
+
+                            if (currentBlockOffset.y + p.y <= 0)
+                                paused = true;
+                            
+                            gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x] = currentBlock.getColor();
+                        }
+
+                        currentBlock.resetAngle();
+                        currentBlock = Blocks.Type.None;
+                        generateBlock = true;
+                        paintImmediately(getVisibleRect());
+                    }
                 }
             }
-    
+            
             try {
-                paintImmediately(getVisibleRect());
-                Thread.sleep(400);
+                Thread.sleep(200);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
         }
+
+        System.out.println("Game over.");
+    }
+    
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+        switch (e.getKeyCode())
+        {
+            case KeyEvent.VK_RIGHT:
+                boolean canMove = true;
+                for (Point p : currentBlock.getPoints())
+                {
+                    if (currentBlockOffset.y + p.y < 0)
+                        continue;
+                    
+                    if (currentBlockOffset.x + p.x == boardX - 1 || gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
+                        canMove = false;
+                }
+                
+                if (canMove)
+                {
+                    currentBlockOffset.translate(1, 0);
+                    paintCurrentBlock();
+                }
+
+                break;
+
+            case KeyEvent.VK_LEFT:
+                canMove = true;
+                for (Point p : currentBlock.getPoints())
+                {
+                    if (currentBlockOffset.y + p.y < 0)
+                        continue;
+
+                    if (currentBlockOffset.x + p.x == 0 || gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
+                        canMove = false;
+                }
+                
+                if (canMove)
+                {
+                    currentBlockOffset.translate(-1, 0);
+                    paintCurrentBlock();
+                }
+            
+                break;
+        
+            case KeyEvent.VK_DOWN:
+                canMove = true;
+                for (Point p : currentBlock.getPoints())
+                {
+                    if (currentBlockOffset.y + p.y + 1 < 0)
+                        continue;
+                    
+                    if (currentBlockOffset.y + p.y == boardY - 1 || gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
+                        canMove = false;
+                }
+                
+                if (canMove)
+                {
+                    currentBlockOffset.translate(0, 1);
+                    paintCurrentBlock();
+                }
+
+                break;
+        
+            case KeyEvent.VK_SPACE:
+                currentBlock.rotateBlock(90);
+
+                if (currentBlockOffset.x + currentBlock.getSize().width >= boardX)
+                    currentBlockOffset.x = boardX - currentBlock.getSize().width - 1;
+                    
+                canMove = true;
+                for (Point p : currentBlock.getPoints())
+                {
+                    if (currentBlockOffset.y + p.y < 0)
+                        continue;
+                    
+                    if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x] != Blocks.Color.None)
+                        canMove = false;
+                }
+                
+                if (canMove)
+                    paintImmediately(getVisibleRect());
+                
+                else
+                    currentBlock.rotateBlock(-90);
+                break;
+
+            default: 
+                return;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) { return; }
+    
+    @Override
+    public void keyTyped(KeyEvent e) { return; }
+
+    private void paintCurrentBlock()
+    {
+        paintImmediately(
+            (currentBlockOffset.x - 1) * (getSize().width / boardX),
+            (currentBlockOffset.y - 1) * (getSize().height / boardY),
+            (currentBlock.getSize().width + 3) * (getSize().width / boardX),
+            (currentBlock.getSize().height + 3) * (getSize().height / boardY)
+        );
     }
     
     @Override
@@ -122,10 +265,11 @@ public class Board extends JPanel {
             for (int j = 0; j < boardX; j++)
             {
                 boolean isCurrentBlock = false;
-                
+
                 for (Point p : currentBlock.getPoints())
                     if (p.getX() + currentBlockOffset.getX() == j && p.getY() + currentBlockOffset.getY() == i)
                         isCurrentBlock = true;
+
                 
                 if (gameBoard[i][j] != Blocks.Color.None || isCurrentBlock)
                 {
@@ -147,7 +291,7 @@ public class Board extends JPanel {
     private int score = 0;
     private Random random = new Random();
     private boolean generateBlock = true;
-    private Blocks.Type nextBlock = Blocks.Type.I;
-    private Blocks.Type currentBlock = Blocks.Type.I;
+    private Blocks.Type nextBlock = Blocks.Type.None;
+    private Blocks.Type currentBlock = Blocks.Type.None;
     private Point currentBlockOffset = new Point();
 }

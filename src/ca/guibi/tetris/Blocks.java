@@ -3,6 +3,7 @@ package ca.guibi.tetris;
 import java.awt.Point;
 import java.awt.Dimension;
 
+
 public final class Blocks
 {
     public enum Type {
@@ -61,6 +62,7 @@ public final class Blocks
 
         private void rotateBlock()
         {
+            // TODO: Rotate around central point
             Point origin = new Point(0, 0);
 
             for (int i = 0; i < originalPoints.length; i++)

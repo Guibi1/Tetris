@@ -56,8 +56,8 @@ public final class Blocks
                     min.y = p.y;
             }
 
-            size.width = max.x - min.x;
-            size.height = max.y - min.y;
+            size.width = 1 + max.x - min.x;
+            size.height = 1 + max.y - min.y;
         }
 
         private void rotateBlock()

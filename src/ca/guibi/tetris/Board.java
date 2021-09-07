@@ -185,10 +185,10 @@ public class Board extends JPanel implements KeyListener {
 
                 java.awt.EventQueue.invokeLater(new Thread(() -> 
                     paintImmediately(
-                        (blockIndicatorOffset.x) * (getSize().width / boardX),
-                        (blockIndicatorOffset.y) * (getSize().height / boardY),
-                        (currentBlock.getSize().width) * (getSize().width / boardX),
-                        (currentBlock.getSize().height) * (getSize().height / boardY)
+                        blockIndicatorOffset.x * getSize().width / boardX,
+                        blockIndicatorOffset.y * getSize().height / boardY,
+                        currentBlock.getSize().width * getSize().width / boardX,
+                        currentBlock.getSize().height * getSize().height / boardY
                     )
                 ));
                 
@@ -203,8 +203,6 @@ public class Board extends JPanel implements KeyListener {
     
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println(KeyEvent.getKeyText(e.getKeyCode()));
-
         switch (e.getKeyCode())
         {
             case KeyEvent.VK_RIGHT:
@@ -223,8 +221,6 @@ public class Board extends JPanel implements KeyListener {
                     currentBlockOffset.translate(1, 0);
                     repaintBoard();
                 }
-
-                System.out.println(canMove);
 
                 break;
 
@@ -273,8 +269,8 @@ public class Board extends JPanel implements KeyListener {
                 currentBlock.rotateBlock(90);
                 int newX = currentBlockOffset.x;
 
-                if (currentBlockOffset.x + currentBlock.getSize().width >= boardX)
-                    newX = boardX - currentBlock.getSize().width - 1;
+                if (currentBlockOffset.x + currentBlock.getSize().width - 1 >= boardX)
+                    newX = boardX - currentBlock.getSize().width;
                     
                 canMove = true;
                 for (Point p : currentBlock.getPoints())
@@ -316,6 +312,7 @@ public class Board extends JPanel implements KeyListener {
 
     private void repaintBoard(boolean paintAll)
     {
+        Point oldIndicatorOffset = new Point((int) blockIndicatorOffset.getX(), (int) blockIndicatorOffset.getY());
         blockIndicatorOffset = new Point((int) currentBlockOffset.getX(), (int) currentBlockOffset.getY());
         boolean canFall = true;
 
@@ -337,24 +334,43 @@ public class Board extends JPanel implements KeyListener {
         if (paintAll)
             java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(getVisibleRect())));
         
-        else
+        else if (oldIndicatorOffset != blockIndicatorOffset)
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->
                 {
                     repaint(
-                        (currentBlockOffset.x - 2) * (getSize().width / boardX),
-                        (currentBlockOffset.y - 2) * (getSize().height / boardY),
-                        (currentBlock.getSize().width + 4) * (getSize().width / boardX),
-                        (currentBlock.getSize().height + 4) * (getSize().height / boardY)
+                        (currentBlockOffset.x - 2) * getSize().width / boardX,
+                        (currentBlockOffset.y - 2) * getSize().height / boardY,
+                        (currentBlock.getSize().width + 4) * getSize().width / boardX,
+                        (currentBlock.getSize().height + 4) * getSize().height / boardY
+                    );
+
+                    repaint(
+                        oldIndicatorOffset.x * getSize().width / boardX,
+                        oldIndicatorOffset.y * getSize().height / boardY,
+                        currentBlock.getSize().width * getSize().width / boardX,
+                        currentBlock.getSize().height * getSize().height / boardY
                     );
 
                     paintImmediately(
-                        (blockIndicatorOffset.x - 2) * (getSize().width / boardX),
-                        (blockIndicatorOffset.y - 2) * (getSize().height / boardY),
-                        (currentBlock.getSize().width + 4) * (getSize().width / boardX),
-                        (currentBlock.getSize().height + 4) * (getSize().height / boardY)
+                        blockIndicatorOffset.x * getSize().width / boardX,
+                        blockIndicatorOffset.y * getSize().height / boardY,
+                        currentBlock.getSize().width * getSize().width / boardX,
+                        currentBlock.getSize().height * getSize().height / boardY
                     );
                 }
+            ));
+        }
+
+        else
+        {
+            java.awt.EventQueue.invokeLater(new Thread(() ->
+                repaint(
+                    (currentBlockOffset.x - 2) * getSize().width / boardX,
+                    (currentBlockOffset.y - 2) * getSize().height / boardY,
+                    (currentBlock.getSize().width + 4) * getSize().width / boardX,
+                    (currentBlock.getSize().height + 4) * getSize().height / boardY
+                )
             ));
         }
     }

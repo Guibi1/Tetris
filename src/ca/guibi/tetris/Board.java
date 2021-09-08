@@ -1,7 +1,6 @@
 package ca.guibi.tetris;
 
 import java.util.Arrays;
-import java.util.Random;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -21,7 +20,7 @@ import java.awt.geom.Rectangle2D;
 
 
 public class Board extends JPanel implements KeyListener {
-    Board()
+    Board(InformationPanel nextBlockPanel)
     {
         setPreferredSize(new Dimension(300, 650));
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -29,6 +28,8 @@ public class Board extends JPanel implements KeyListener {
         add(boardLines);
         validate();
         setBackground(Color.decode("#121417"));
+
+        this.infoPanel = nextBlockPanel;
 
         for (Blocks.Color[] a : gameBoard)
             Arrays.fill(a, Blocks.Color.None);
@@ -40,10 +41,10 @@ public class Board extends JPanel implements KeyListener {
             Arrays.fill(a, Blocks.Color.None);
 
         paused = false;
-        score = 0;
+        infoPanel.setScore(0);
         generateBlock = true;
         currentBlock = Blocks.Type.None;
-        nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length - 1)];
+        infoPanel.generateNextBlock();
 
         Run();
     }
@@ -56,7 +57,7 @@ public class Board extends JPanel implements KeyListener {
             while (!paused)
             {
                 // Checks for completed line
-                boolean completedLine = false;
+                int completedLines = 0;
                 for (int i = boardY - 1; i >= 0;)
                 {
                     if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
@@ -71,15 +72,36 @@ public class Board extends JPanel implements KeyListener {
                             gameBoard[j] = temp;
                         }
         
-                        completedLine = true;
-
-                        // TODO: Calculate score
+                        completedLines += 1;
                     }
 
                     else i -= 1;
                 }
 
-                if (completedLine)
+                switch (completedLines) {
+                    case 0:
+                        break;
+
+                    case 1:
+                        infoPanel.addScore(getLevel() * 40);
+                        break;
+
+                    case 2:
+                        infoPanel.addScore(getLevel() * 100);
+                        break;
+
+                    case 3:
+                        infoPanel.addScore(getLevel() * 300);
+                        break;
+
+                    default:
+                        infoPanel.addScore(getLevel() * 1200);
+                        break;
+                }
+
+                linesCompleted += completedLines;
+
+                if (completedLines != 0)
                     repaintBoard(true);
 
                 else
@@ -88,10 +110,10 @@ public class Board extends JPanel implements KeyListener {
                     if (generateBlock)
                     {
                         generateBlock = false;
-                        currentBlock = nextBlock;
-                        currentBlock.rotateBlock(random.nextInt(4) * 90);
-                        currentBlockOffset.setLocation((boardX - currentBlock.getSize().width) / 2, 0 - currentBlock.getSize().height);
-                        nextBlock = Blocks.Type.values()[random.nextInt(Blocks.Type.values().length - 1)];
+                        currentBlock = infoPanel.getNextBlock();
+                        currentBlockRotation = infoPanel.getNextBlockRotation();
+                        currentBlockOffset.setLocation((boardX - currentBlock.getSize(currentBlockRotation).width) / 2, 0 - currentBlock.getSize(currentBlockRotation).height);
+                        infoPanel.generateNextBlock();
                         repaintBoard();
                     }
 
@@ -99,7 +121,7 @@ public class Board extends JPanel implements KeyListener {
                     else
                     {
                         boolean canFall = true;
-                        for (Point p : currentBlock.getPoints())
+                        for (Point p : currentBlock.getPoints(currentBlockRotation))
                         {
                             if (currentBlockOffset.y + p.y + 1 < 0)
                                 continue;
@@ -117,7 +139,7 @@ public class Board extends JPanel implements KeyListener {
                         else
                         {
                             // Check if game is over
-                            for (Point p : currentBlock.getPoints())
+                            for (Point p : currentBlock.getPoints(currentBlockRotation))
                             {
                                 if (currentBlockOffset.y + p.y < 0)
                                     continue;
@@ -128,7 +150,6 @@ public class Board extends JPanel implements KeyListener {
                                 gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x] = currentBlock.getColor();
                             }
 
-                            currentBlock.resetAngle();
                             currentBlock = Blocks.Type.None;
                             generateBlock = true;
                             repaintBoard(true);
@@ -137,7 +158,7 @@ public class Board extends JPanel implements KeyListener {
                 }
                 
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep((getLevel() < 150) ? Math.round(80 * Math.cos(getLevel() / (15 * Math.PI)) + 120) : 40);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
@@ -187,8 +208,8 @@ public class Board extends JPanel implements KeyListener {
                     paintImmediately(
                         blockIndicatorOffset.x * getSize().width / boardX,
                         blockIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize().width * getSize().width / boardX,
-                        currentBlock.getSize().height * getSize().height / boardY
+                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
                     )
                 ));
                 
@@ -200,6 +221,11 @@ public class Board extends JPanel implements KeyListener {
             }
         }).start();
     }
+
+    public int getLevel()
+    {
+        return 1 + linesCompleted % 10;
+    }
     
     @Override
     public void keyPressed(KeyEvent e) {
@@ -207,7 +233,7 @@ public class Board extends JPanel implements KeyListener {
         {
             case KeyEvent.VK_RIGHT:
                 boolean canMove = true;
-                for (Point p : currentBlock.getPoints())
+                for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
                     if (currentBlockOffset.y + p.y < 0)
                         continue;
@@ -226,7 +252,7 @@ public class Board extends JPanel implements KeyListener {
 
             case KeyEvent.VK_LEFT:
                 canMove = true;
-                for (Point p : currentBlock.getPoints())
+                for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
                     if (currentBlockOffset.y + p.y < 0)
                         continue;
@@ -245,7 +271,7 @@ public class Board extends JPanel implements KeyListener {
         
             case KeyEvent.VK_DOWN:
                 canMove = true;
-                for (Point p : currentBlock.getPoints())
+                for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
                     if (currentBlockOffset.y + p.y + 1 < 0)
                         continue;
@@ -263,17 +289,16 @@ public class Board extends JPanel implements KeyListener {
                 break;
         
             case KeyEvent.VK_SPACE:
-                if (currentBlockOffset.y + currentBlock.getSize().width > boardY - 1)
+                if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation).width > boardY - 1)
                     break;
 
-                currentBlock.rotateBlock(90);
                 int newX = currentBlockOffset.x;
 
-                if (currentBlockOffset.x + currentBlock.getSize().width - 1 >= boardX)
-                    newX = boardX - currentBlock.getSize().width;
+                if (currentBlockOffset.x + currentBlock.getSize(currentBlockRotation += 90).width - 1 >= boardX)
+                    newX = boardX - currentBlock.getSize(currentBlockRotation += 90).width;
                     
                 canMove = true;
-                for (Point p : currentBlock.getPoints())
+                for (Point p : currentBlock.getPoints(currentBlockRotation += 90))
                 {
                     if (currentBlockOffset.y + p.y < 0)
                         continue;
@@ -284,12 +309,10 @@ public class Board extends JPanel implements KeyListener {
                 
                 if (canMove)
                 {
+                    currentBlockRotation += 90;
                     currentBlockOffset.x = newX;
                     repaintBoard(true);
                 }
-                
-                else
-                    currentBlock.rotateBlock(-90);
                 break;
 
             default:
@@ -318,7 +341,7 @@ public class Board extends JPanel implements KeyListener {
 
         while (currentBlock != Blocks.Type.None && canFall)
         {
-            for (Point p : currentBlock.getPoints())
+            for (Point p : currentBlock.getPoints(currentBlockRotation))
             {
                 if (blockIndicatorOffset.y + p.y + 1 < 0)
                     continue;
@@ -332,7 +355,7 @@ public class Board extends JPanel implements KeyListener {
         }
         
         if (paintAll)
-            java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(getVisibleRect())));
+            java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(0, 0, getSize().width, getSize().height)));
         
         else if (oldIndicatorOffset != blockIndicatorOffset)
         {
@@ -341,22 +364,22 @@ public class Board extends JPanel implements KeyListener {
                     repaint(
                         (currentBlockOffset.x - 2) * getSize().width / boardX,
                         (currentBlockOffset.y - 2) * getSize().height / boardY,
-                        (currentBlock.getSize().width + 4) * getSize().width / boardX,
-                        (currentBlock.getSize().height + 4) * getSize().height / boardY
+                        (currentBlock.getSize(currentBlockRotation).width + 4) * getSize().width / boardX,
+                        (currentBlock.getSize(currentBlockRotation).height + 4) * getSize().height / boardY
                     );
 
                     repaint(
                         oldIndicatorOffset.x * getSize().width / boardX,
                         oldIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize().width * getSize().width / boardX,
-                        currentBlock.getSize().height * getSize().height / boardY
+                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
                     );
 
                     paintImmediately(
                         blockIndicatorOffset.x * getSize().width / boardX,
                         blockIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize().width * getSize().width / boardX,
-                        currentBlock.getSize().height * getSize().height / boardY
+                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
                     );
                 }
             ));
@@ -368,8 +391,8 @@ public class Board extends JPanel implements KeyListener {
                 repaint(
                     (currentBlockOffset.x - 2) * getSize().width / boardX,
                     (currentBlockOffset.y - 2) * getSize().height / boardY,
-                    (currentBlock.getSize().width + 4) * getSize().width / boardX,
-                    (currentBlock.getSize().height + 4) * getSize().height / boardY
+                    (currentBlock.getSize(currentBlockRotation).width + 4) * getSize().width / boardX,
+                    (currentBlock.getSize(currentBlockRotation).height + 4) * getSize().height / boardY
                 )
             ));
         }
@@ -384,7 +407,7 @@ public class Board extends JPanel implements KeyListener {
         int width = getSize().width;
         int height = getSize().height;
 
-        for (Point p : currentBlock.getPoints())
+        for (Point p : currentBlock.getPoints(currentBlockRotation))
         {
             g2D.setColor(currentBlock.getJavaColor());
             g2D.fill(new Rectangle2D.Double(
@@ -420,19 +443,25 @@ public class Board extends JPanel implements KeyListener {
             }
     }
 
+
     int boardX = 10;
     int boardY = 20;
     private BoardLines boardLines;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
+
     private boolean paused = false;
-    private int score = 0;
-    private Random random = new Random(System.currentTimeMillis());
+    private int linesCompleted = 0;
+
     private boolean generateBlock = true;
-    private Blocks.Type nextBlock = Blocks.Type.None;
+    private InformationPanel infoPanel;
+
     private Blocks.Type currentBlock = Blocks.Type.None;
+    private int currentBlockRotation = 0;
     private Point currentBlockOffset = new Point(0, 0);
+
     private Point blockIndicatorOffset = new Point(0, 0);
     private float alphaBlockIndicator = 0f;
+
 
     private class BoardLines extends JPanel
     {

@@ -18,30 +18,32 @@ public final class Blocks
 
         private final Color color;
         private final Point[] originalPoints;
-        private Point[] points;
-        private Dimension size;
-        private int angle;
+        
+        private Dimension lastSize;
+        private int lastAngle;
+        private Point[] lastPoints;
+
 
         Type(Point[] points, Color color)
         {
             this.color = color;
-            this.points = points;
-            size = new Dimension();
-            angle = 0;
+            lastSize = new Dimension();
+            lastAngle = 0;
             
             originalPoints = new Point[points.length];
             for (int i = 0; i< points.length; i++)
                 originalPoints[i] = new Point(points[i].x, points[i].y);
-
-            updateSize();
+            
+            lastPoints = getRotatedPoints(lastAngle);
+            updateSize(lastAngle);
         }
         
-        private void updateSize()
+        private void updateSize(int angle)
         {
             Point min = new Point(0, 0);
             Point max = new Point(0, 0);
 
-            for (Point p : points)
+            for (Point p : getPoints(angle))
             {
                 if (p.x > max.x)
                     max.x = p.x;
@@ -56,71 +58,53 @@ public final class Blocks
                     min.y = p.y;
             }
 
-            size.width = 1 + max.x - min.x;
-            size.height = 1 + max.y - min.y;
+            lastSize.width = 1 + max.x - min.x;
+            lastSize.height = 1 + max.y - min.y;
         }
 
-        private void rotateBlock()
+        private Point[] getRotatedPoints(int angle)
         {
             // TODO: Rotate around central point
             Point origin = new Point(0, 0);
+            Point[] newPoints = new Point[originalPoints.length];
 
             for (int i = 0; i < originalPoints.length; i++)
             {
                 int x = (int) Math.round(originalPoints[i].getX() * Math.cos(Math.toRadians(angle)) - originalPoints[i].getY() * Math.sin(Math.toRadians(angle)));
                 int y = (int) Math.round(originalPoints[i].getY() * Math.cos(Math.toRadians(angle)) + originalPoints[i].getX() * Math.sin(Math.toRadians(angle)));
             
-                points[i].x = x;
-                points[i].y = y;
+                newPoints[i] = new Point(x, y);
 
                 if (x < origin.x)
-                    origin.x = points[i].x;
+                    origin.x = newPoints[i].x;
 
                 if (y < origin.y)
-                    origin.y = points[i].y;
+                    origin.y = newPoints[i].y;
             }
 
-            for (Point p : points)
+            for (Point p : newPoints)
             {
                 p.x -= origin.x;
                 p.y -= origin.y;
             }
 
-            updateSize();
-        }
-        
-        public void rotateBlock(int angle)
-        {
-            this.angle += angle;
-
-            while (this.angle >= 360)
-                this.angle -= 360;
-
-            while (this.angle <= -360)
-                this.angle += 360;
-
-            rotateBlock();
+            return newPoints;
         }
 
-        public void resetAngle()
+        public Dimension getSize(int angle)
         {
-            angle = 0;
-            rotateBlock();
+            if (angle != lastAngle)
+                updateSize(angle);
+
+            return lastSize;
         }
 
-        public int getAngle()
+        public Point[] getPoints(int angle)
         {
-            return angle;
-        }
-
-        public Dimension getSize()
-        {
-            return size;
-        }
-
-        public Point[] getPoints()
-        {
-            return points;
+            if (angle != lastAngle)
+                lastPoints = getRotatedPoints(angle);
+            
+            return lastPoints;
         }
 
         public Color getColor()

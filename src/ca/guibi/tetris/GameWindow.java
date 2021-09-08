@@ -22,7 +22,10 @@ public class GameWindow extends JFrame {
 
         // Layout
         setLayout(new FlowLayout());
-        game = new Board();
+        nextBlockPanel = new InformationPanel(30);
+        add(nextBlockPanel);
+
+        game = new Board(nextBlockPanel);
         addKeyListener(game);
         add(game);
         
@@ -34,4 +37,5 @@ public class GameWindow extends JFrame {
 
 
     Board game;
+    InformationPanel nextBlockPanel;
 }

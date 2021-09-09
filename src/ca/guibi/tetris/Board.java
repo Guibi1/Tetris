@@ -235,10 +235,16 @@ public class Board extends JPanel implements KeyListener {
                 boolean canMove = true;
                 for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
-                    if (currentBlockOffset.y + p.y < 0)
+                    // Can't move to the right if it makes it move outside of the board
+                    if (currentBlockOffset.x + p.x >= boardX - 1)
+                        canMove = false;
+
+                    // Ignore the point if it is too high up
+                    else if (currentBlockOffset.y + p.y < 0)
                         continue;
                     
-                    else if (currentBlockOffset.x + p.x >= boardX - 1 || gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
+                    // Check if the point at the right isn't empty
+                    else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
                         canMove = false;
                 }
                 
@@ -254,10 +260,16 @@ public class Board extends JPanel implements KeyListener {
                 canMove = true;
                 for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
-                    if (currentBlockOffset.y + p.y < 0)
+                    // Can't move to the left if it makes it move out of the board
+                    if (currentBlockOffset.x + p.x <= 0)
+                        canMove = false;
+                    
+                    // Ignore the point if it is too high up
+                    else if (currentBlockOffset.y + p.y < 0)
                         continue;
 
-                    else if (currentBlockOffset.x + p.x <= 0 || gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
+                    // Check if the point at the left isn't empty
+                    else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
                         canMove = false;
                 }
                 
@@ -273,10 +285,16 @@ public class Board extends JPanel implements KeyListener {
                 canMove = true;
                 for (Point p : currentBlock.getPoints(currentBlockRotation))
                 {
-                    if (currentBlockOffset.y + p.y + 1 < 0)
+                    // Can't fall if it is at the bottom of the board
+                    if (currentBlockOffset.y + p.y >= boardY - 1)
+                        canMove = false;
+                    
+                    // Ignore the point if it will be too high up after falling
+                    else if (currentBlockOffset.y + p.y + 1 < 0)
                         continue;
                     
-                    if (currentBlockOffset.y + p.y >= boardY - 1 || gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
+                    // Check if the point below isn't empty
+                    else if (gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
                         canMove = false;
                 }
                 
@@ -289,20 +307,23 @@ public class Board extends JPanel implements KeyListener {
                 break;
         
             case KeyEvent.VK_SPACE:
-                if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation).width > boardY - 1)
+                // Breaks if the rotation makes the block go outside of the board on the Y axis
+                if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation + 90).height > boardY - 1)
                     break;
 
+                // Shifts the block to the left if it goes outside of the screen to the right
                 int newX = currentBlockOffset.x;
-
-                if (currentBlockOffset.x + currentBlock.getSize(currentBlockRotation += 90).width - 1 >= boardX)
-                    newX = boardX - currentBlock.getSize(currentBlockRotation += 90).width;
+                if (currentBlockOffset.x + currentBlock.getSize(currentBlockRotation + 90).width - 1 >= boardX)
+                    newX = boardX - currentBlock.getSize(currentBlockRotation + 90).width;
                     
                 canMove = true;
-                for (Point p : currentBlock.getPoints(currentBlockRotation += 90))
+                for (Point p : currentBlock.getPoints(currentBlockRotation + 90))
                 {
+                    // Ignore the point if it is too high
                     if (currentBlockOffset.y + p.y < 0)
                         continue;
                     
+                    // Checks if the rotated point isn't empty
                     if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
                         canMove = false;
                 }
@@ -335,32 +356,44 @@ public class Board extends JPanel implements KeyListener {
 
     private void repaintBoard(boolean paintAll)
     {
+        // Finds where the block will fall
         Point oldIndicatorOffset = new Point((int) blockIndicatorOffset.getX(), (int) blockIndicatorOffset.getY());
         blockIndicatorOffset = new Point((int) currentBlockOffset.getX(), (int) currentBlockOffset.getY());
         boolean canFall = true;
 
+        // Repeat as long as the indicator block fell
         while (currentBlock != Blocks.Type.None && canFall)
         {
             for (Point p : currentBlock.getPoints(currentBlockRotation))
             {
+                // Ignore the point if it is outside of the board
+                if (blockIndicatorOffset.x + p.x < 0 || blockIndicatorOffset.x  + p.x > boardX - 1)
+                    continue;
+                
+                // Ignore the point if it is too high up to be in the board
                 if (blockIndicatorOffset.y + p.y + 1 < 0)
                     continue;
                 
+                // The block can't fall if the point under it isn't empty
                 if (blockIndicatorOffset.y + p.y >= boardY - 1 || gameBoard[blockIndicatorOffset.y + p.y + 1][blockIndicatorOffset.x + p.x] != Blocks.Color.None)
                     canFall = false;
             }
             
+            // Drags down the block indicator by 1
             if (canFall)
                 blockIndicatorOffset.translate(0, 1);
         }
         
+        // Repaints all the board
         if (paintAll)
             java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(0, 0, getSize().width, getSize().height)));
         
+        // Repaint the indicator if it moved
         else if (oldIndicatorOffset != blockIndicatorOffset)
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->
                 {
+                    // Repaints around the current block
                     repaint(
                         (currentBlockOffset.x - 2) * getSize().width / boardX,
                         (currentBlockOffset.y - 2) * getSize().height / boardY,
@@ -368,6 +401,7 @@ public class Board extends JPanel implements KeyListener {
                         (currentBlock.getSize(currentBlockRotation).height + 4) * getSize().height / boardY
                     );
 
+                    // Repaints where the block indicator was
                     repaint(
                         oldIndicatorOffset.x * getSize().width / boardX,
                         oldIndicatorOffset.y * getSize().height / boardY,
@@ -375,6 +409,7 @@ public class Board extends JPanel implements KeyListener {
                         currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
                     );
 
+                    // Repaints the block indicator
                     paintImmediately(
                         blockIndicatorOffset.x * getSize().width / boardX,
                         blockIndicatorOffset.y * getSize().height / boardY,
@@ -385,6 +420,7 @@ public class Board extends JPanel implements KeyListener {
             ));
         }
 
+        // Repaints only around the current block
         else
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->

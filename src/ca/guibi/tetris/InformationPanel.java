@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.awt.Graphics;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.BasicStroke;
 
 
 public class InformationPanel extends JPanel {
@@ -74,8 +75,6 @@ public class InformationPanel extends JPanel {
         super.paintComponent(g);
         Graphics2D g2D = (Graphics2D) g;
 
-        // TODO: Add a grid
-
         for (Point p : nextBlock.getPoints(nextBlockRotation))
         {
             g2D.setColor(nextBlock.getJavaColor());
@@ -84,6 +83,34 @@ public class InformationPanel extends JPanel {
                 p.y * blockSize + offset.y,
                 blockSize,
                 blockSize
+            );
+
+            // Lines
+            g2D.setStroke(new BasicStroke(2));
+            g2D.setColor(Color.decode("#373D43"));
+            g2D.drawLine(
+                p.x * blockSize + offset.x,
+                p.y * blockSize + offset.y,
+                (p.x + 1) * blockSize + offset.x,
+                p.y * blockSize + offset.y
+            );
+            g2D.drawLine(
+                p.x * blockSize + offset.x,
+                p.y * blockSize + offset.y,
+                p.x * blockSize + offset.x,
+                (p.y + 1) * blockSize + offset.y
+            );
+            g2D.drawLine(
+                p.x * blockSize + offset.x + blockSize,
+                p.y * blockSize + offset.y,
+                (p.x + 1) * blockSize + offset.x,
+                (p.y + 1) * blockSize + offset.y
+            );
+            g2D.drawLine(
+                p.x * blockSize + offset.x,
+                p.y * blockSize + offset.y + blockSize,
+                (p.x + 1) * blockSize + offset.x,
+                (p.y + 1) * blockSize + offset.y
             );
         }
     }

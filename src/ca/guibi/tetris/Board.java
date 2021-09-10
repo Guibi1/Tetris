@@ -282,28 +282,13 @@ public class Board extends JPanel implements KeyListener {
                 break;
         
             case KeyEvent.VK_DOWN:
-                canMove = true;
-                for (Point p : currentBlock.getPoints(currentBlockRotation))
-                {
-                    // Can't fall if it is at the bottom of the board
-                    if (currentBlockOffset.y + p.y >= boardY - 1)
-                        canMove = false;
-                    
-                    // Ignore the point if it will be too high up after falling
-                    else if (currentBlockOffset.y + p.y + 1 < 0)
-                        continue;
-                    
-                    // Check if the point below isn't empty
-                    else if (gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
-                        canMove = false;
-                }
-                
-                if (canMove)
-                {
-                    currentBlockOffset.translate(0, 1);
-                    repaintBoard();
-                }
+                int blocksFallen = blockIndicatorOffset.y - currentBlockOffset.y;
+                currentBlockOffset.setLocation(blockIndicatorOffset);
 
+                if (blocksFallen >= 5)
+                    infoPanel.addScore(blocksFallen * 2);
+
+                repaintBoard(true);
                 break;
         
             case KeyEvent.VK_SPACE:

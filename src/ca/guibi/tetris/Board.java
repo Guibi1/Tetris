@@ -6,7 +6,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import javax.swing.JPanel;
-import javax.swing.BoxLayout;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
@@ -14,6 +13,7 @@ import java.awt.Point;
 import java.awt.Graphics;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.FlowLayout;
 import java.awt.BasicStroke;
 import java.awt.AlphaComposite;
 import java.awt.geom.Rectangle2D;
@@ -22,12 +22,10 @@ import java.awt.geom.Rectangle2D;
 public class Board extends JPanel implements KeyListener {
     Board(InformationPanel nextBlockPanel)
     {
-        setPreferredSize(new Dimension(300, 650));
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        boardLines = new BoardLines();
-        add(boardLines);
+        setLayout(new FlowLayout());
+        drawPanel = new DrawPanel();
+        add(drawPanel);
         validate();
-        setBackground(Color.decode("#121417"));
 
         this.infoPanel = nextBlockPanel;
 
@@ -205,11 +203,11 @@ public class Board extends JPanel implements KeyListener {
                 }
 
                 java.awt.EventQueue.invokeLater(new Thread(() -> 
-                    paintImmediately(
-                        blockIndicatorOffset.x * getSize().width / boardX,
-                        blockIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
+                    drawPanel.paintImmediately(
+                        blockIndicatorOffset.x * drawPanel.getSize().width / boardX,
+                        blockIndicatorOffset.y * drawPanel.getSize().height / boardY,
+                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
                     )
                 ));
                 
@@ -371,7 +369,7 @@ public class Board extends JPanel implements KeyListener {
         
         // Repaints all the board
         if (paintAll)
-            java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(0, 0, getSize().width, getSize().height)));
+            java.awt.EventQueue.invokeLater(new Thread(() -> drawPanel.paintImmediately(0, 0, drawPanel.getSize().width, drawPanel.getSize().height)));
         
         // Repaint the indicator if it moved
         else if (oldIndicatorOffset != blockIndicatorOffset)
@@ -379,27 +377,27 @@ public class Board extends JPanel implements KeyListener {
             java.awt.EventQueue.invokeLater(new Thread(() ->
                 {
                     // Repaints around the current block
-                    repaint(
-                        (currentBlockOffset.x - 2) * getSize().width / boardX,
-                        (currentBlockOffset.y - 2) * getSize().height / boardY,
-                        (currentBlock.getSize(currentBlockRotation).width + 4) * getSize().width / boardX,
-                        (currentBlock.getSize(currentBlockRotation).height + 4) * getSize().height / boardY
+                    drawPanel.repaint(
+                        (currentBlockOffset.x - 2) * drawPanel.getSize().width / boardX,
+                        (currentBlockOffset.y - 2) * drawPanel.getSize().height / boardY,
+                        (currentBlock.getSize(currentBlockRotation).width + 4) * drawPanel.getSize().width / boardX,
+                        (currentBlock.getSize(currentBlockRotation).height + 4) * drawPanel.getSize().height / boardY
                     );
 
                     // Repaints where the block indicator was
-                    repaint(
-                        oldIndicatorOffset.x * getSize().width / boardX,
-                        oldIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
+                    drawPanel.repaint(
+                        oldIndicatorOffset.x * drawPanel.getSize().width / boardX,
+                        oldIndicatorOffset.y * drawPanel.getSize().height / boardY,
+                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
                     );
 
                     // Repaints the block indicator
-                    paintImmediately(
-                        blockIndicatorOffset.x * getSize().width / boardX,
-                        blockIndicatorOffset.y * getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * getSize().height / boardY
+                    drawPanel.paintImmediately(
+                        blockIndicatorOffset.x * drawPanel.getSize().width / boardX,
+                        blockIndicatorOffset.y * drawPanel.getSize().height / boardY,
+                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
+                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
                     );
                 }
             ));
@@ -409,65 +407,19 @@ public class Board extends JPanel implements KeyListener {
         else
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->
-                repaint(
-                    (currentBlockOffset.x - 2) * getSize().width / boardX,
-                    (currentBlockOffset.y - 2) * getSize().height / boardY,
-                    (currentBlock.getSize(currentBlockRotation).width + 4) * getSize().width / boardX,
-                    (currentBlock.getSize(currentBlockRotation).height + 4) * getSize().height / boardY
+                drawPanel.repaint(
+                    (currentBlockOffset.x - 2) * drawPanel.getSize().width / boardX,
+                    (currentBlockOffset.y - 2) * drawPanel.getSize().height / boardY,
+                    (currentBlock.getSize(currentBlockRotation).width + 4) * drawPanel.getSize().width / boardX,
+                    (currentBlock.getSize(currentBlockRotation).height + 4) * drawPanel.getSize().height / boardY
                 )
             ));
         }
     }
-    
-    @Override
-    protected void paintComponent(Graphics g)
-    {
-        super.paintComponent(g);
-        Graphics2D g2D = (Graphics2D) g;
-
-        int width = getSize().width;
-        int height = getSize().height;
-
-        for (Point p : currentBlock.getPoints(currentBlockRotation))
-        {
-            g2D.setColor(currentBlock.getJavaColor());
-            g2D.fill(new Rectangle2D.Double(
-                (p.x + currentBlockOffset.x) * width / boardX,
-                (p.y + currentBlockOffset.y) * height / boardY,
-                width / boardX,
-                height / boardY
-            ));
-
-            g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaBlockIndicator));
-            g2D.fill(new Rectangle2D.Double(
-                (p.x + blockIndicatorOffset.x) * width / boardX,
-                (p.y + blockIndicatorOffset.y) * height / boardY,
-                width / boardX,
-                height / boardY
-            ));
-            g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-        }
-
-        for (int i = 0; i < boardY; i++)
-            for (int j = 0; j < boardX; j++)
-            {
-                if (gameBoard[i][j] != Blocks.Color.None)
-                {
-                    g2D.setColor(gameBoard[i][j].getJavaColor());
-                    g2D.fill(new Rectangle2D.Double(
-                        j * width / boardX,
-                        i * height / boardY,
-                        width / boardX,
-                        height / boardY
-                    ));
-                }
-            }
-    }
-
 
     int boardX = 10;
     int boardY = 20;
-    private BoardLines boardLines;
+    private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
     private boolean paused = false;
@@ -484,12 +436,26 @@ public class Board extends JPanel implements KeyListener {
     private float alphaBlockIndicator = 0f;
 
 
-    private class BoardLines extends JPanel
+    private class DrawPanel extends JPanel
     {
-        BoardLines()
+        DrawPanel()
         {
-            setOpaque(false);
+            setPreferredSize(new Dimension(300, 650));
             setBorder(new LineBorder(Color.decode("#373D43"), strokeSize));
+            setBackground(Color.decode("#121417"));
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            double aspectRatio = 1.0 / 2.0;
+
+            Dimension d = getParent().getSize();
+            int newHeight = (int) Math.round(Math.min(
+                d.height - 10,
+                (d.width - 10) * (1 / aspectRatio)
+            ));
+
+            return new Dimension((int) Math.round(newHeight * aspectRatio), newHeight);
         }
 
         @Override
@@ -500,7 +466,48 @@ public class Board extends JPanel implements KeyListener {
 
             int width = getSize().width;
             int height = getSize().height;
-    
+
+            for (Point p : currentBlock.getPoints(currentBlockRotation))
+            {
+                // Draw current block
+                g2D.setColor(currentBlock.getJavaColor());
+                g2D.fill(new Rectangle2D.Double(
+                    (p.x + currentBlockOffset.x) * width / boardX,
+                    (p.y + currentBlockOffset.y) * height / boardY,
+                    width / boardX,
+                    height / boardY
+                ));
+
+                // Draw current block indicator
+                g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaBlockIndicator));
+                g2D.fill(new Rectangle2D.Double(
+                    (p.x + blockIndicatorOffset.x) * width / boardX,
+                    (p.y + blockIndicatorOffset.y) * height / boardY,
+                    width / boardX,
+                    height / boardY
+                ));
+                g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            }
+
+            // Draw gameboard blocks
+            for (int i = 0; i < boardY; i++)
+            {
+                for (int j = 0; j < boardX; j++)
+                {
+                    if (gameBoard[i][j] != Blocks.Color.None)
+                    {
+                        g2D.setColor(gameBoard[i][j].getJavaColor());
+                        g2D.fill(new Rectangle2D.Double(
+                            j * width / boardX,
+                            i * height / boardY,
+                            width / boardX,
+                            height / boardY
+                        ));
+                    }
+                }
+            }
+
+            // Draw board lines
             g2D.setStroke(new BasicStroke(strokeSize));
             g2D.setColor(Color.decode("#373D43"));
             for (int i = 1; i <= boardX; i++)

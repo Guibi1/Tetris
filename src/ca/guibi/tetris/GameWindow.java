@@ -2,7 +2,7 @@ package ca.guibi.tetris;
 
 import java.awt.Toolkit;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
 
@@ -21,15 +21,13 @@ public class GameWindow extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         // Layout
-        setLayout(new FlowLayout());
+        setLayout(new BorderLayout());
         nextBlockPanel = new InformationPanel(30);
-        add(nextBlockPanel);
+        add(nextBlockPanel, BorderLayout.LINE_START);
 
         game = new Board(nextBlockPanel);
         addKeyListener(game);
-        add(game);
-        
-        // TODO: Show the next block and the score
+        add(game, BorderLayout.CENTER);
 
         validate();
         setVisible(true);

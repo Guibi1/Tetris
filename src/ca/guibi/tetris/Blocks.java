@@ -43,6 +43,8 @@ public final class Blocks
             Point min = new Point(0, 0);
             Point max = new Point(0, 0);
 
+            // double rotationPoint = Math.max(getSize(angle).width, getSize(angle).height) / 2;
+
             for (Point p : getPoints(angle))
             {
                 if (p.x > max.x)

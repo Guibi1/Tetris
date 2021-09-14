@@ -1,10 +1,12 @@
 package ca.guibi.tetris;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.BoxLayout;
+
 import java.awt.Toolkit;
 import java.awt.Dimension;
 import java.awt.BorderLayout;
-
-import javax.swing.JFrame;
 
 
 public class GameWindow extends JFrame {
@@ -20,20 +22,39 @@ public class GameWindow extends JFrame {
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        // Layout
+        // Main layout
         setLayout(new BorderLayout());
-        nextBlockPanel = new InformationPanel(30);
-        add(nextBlockPanel, BorderLayout.LINE_START);
 
-        game = new Board(nextBlockPanel);
+        // Left
+        layoutLeft = new JPanel();
+        layoutLeft.setLayout(new BoxLayout(layoutLeft, BoxLayout.Y_AXIS));
+        add(layoutLeft, BorderLayout.LINE_START);
+
+        holdBlockPanel = new BlockShowcase("Hold", 30);
+        layoutLeft.add(holdBlockPanel);
+        
+        scorePanel = new GameStats();
+        layoutLeft.add(scorePanel);
+
+        // Right
+        nextBlockPanel = new BlockShowcase("Next block", 30);
+        add(nextBlockPanel, BorderLayout.LINE_END);
+
+        // Centre
+        game = new Board(nextBlockPanel, holdBlockPanel, scorePanel);
         addKeyListener(game);
         add(game, BorderLayout.CENTER);
 
+        // All done !
         validate();
         setVisible(true);
     }
 
 
     Board game;
-    InformationPanel nextBlockPanel;
+    BlockShowcase nextBlockPanel;
+    BlockShowcase holdBlockPanel;
+    GameStats scorePanel;
+
+    JPanel layoutLeft;
 }

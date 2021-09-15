@@ -12,16 +12,6 @@ import java.awt.BorderLayout;
 public class GameWindow extends JFrame {
     GameWindow()
     {
-        // Window parameters
-        setSize(550, 700);
-        //setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setTitle("Tetris");
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation((screenSize.width - getSize().width) / 2, (screenSize.height - getSize().height) / 2);
-
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-
         // Main layout
         setLayout(new BorderLayout());
 
@@ -46,6 +36,19 @@ public class GameWindow extends JFrame {
         add(game, BorderLayout.CENTER);
 
         validate();
+
+        // Window parameters
+        setMinimumSize(new Dimension(
+            game.getMinimumSize().width + holdBlockPanel.getMinimumSize().width + nextBlockPanel.getMinimumSize().width + 100,
+            Math.max(game.getMinimumSize().height, Math.max(holdBlockPanel.getMinimumSize().height, nextBlockPanel.getMinimumSize().height))
+        ));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setTitle("Tetris");
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation((screenSize.width - getSize().width) / 2, (screenSize.height - getSize().height) / 2);
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
 

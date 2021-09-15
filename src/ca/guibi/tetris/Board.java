@@ -35,6 +35,8 @@ public class Board extends JPanel implements KeyListener {
         drawPanel = new DrawPanel();
         add(drawPanel);
         validate();
+
+        setMinimumSize(new Dimension(boardX * 40, boardY * 40));
     }
 
     void NewGame()

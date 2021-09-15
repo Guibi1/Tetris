@@ -31,10 +31,11 @@ public class BlockShowcase extends JPanel {
         titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         add(titleLabel);
 
-        showcaseFrame = new ShowcaseFrame();
-        add(showcaseFrame);
+        drawPanel = new DrawPanel();
+        add(drawPanel);
         
         validate();
+        setMinimumSize(drawPanel.getPreferredSize());
         
         // Fills the vector of random blocs
         if (generateBlocks)
@@ -54,7 +55,7 @@ public class BlockShowcase extends JPanel {
         showcasedBlocks.add(newBlock);
 
         // Repaint the newly added block
-        showcaseFrame.paintBlocks(showcasedBlocks.size() - 1);
+        drawPanel.paintBlocks(showcasedBlocks.size() - 1);
     }
 
     public void addRandomBlock()
@@ -67,13 +68,13 @@ public class BlockShowcase extends JPanel {
         addBlock(Blocks.Type.values()[random.nextInt(Blocks.Type.values().length - 1)], random.nextInt(4) * 90);
         
         // Repaint the newly added block
-        showcaseFrame.paintBlocks(showcasedBlocks.size() - 1);
+        drawPanel.paintBlocks(showcasedBlocks.size() - 1);
     }
     
     public void removeBlockAt(int index)
     {
         showcasedBlocks.remove(index);
-        showcaseFrame.paintBlocks(-1);
+        drawPanel.paintBlocks(-1);
 
         // TODO: Make an animation
     }
@@ -101,7 +102,7 @@ public class BlockShowcase extends JPanel {
     private int blockSize;
     
     private JLabel titleLabel;
-    private ShowcaseFrame showcaseFrame;
+    private DrawPanel drawPanel;
 
     private Random random = new Random(System.currentTimeMillis());
     private Vector<Block> showcasedBlocks;
@@ -120,9 +121,9 @@ public class BlockShowcase extends JPanel {
         public Point offset;
     }
 
-    private class ShowcaseFrame extends JPanel
+    private class DrawPanel extends JPanel
     {
-        ShowcaseFrame()
+        DrawPanel()
         {
             setPreferredSize(new Dimension((int) Math.round(blockSize * ratioWidth), (int) Math.round(blockSize * ratioHeight * maxBlockCount)));
             setBackground(Color.decode("#121417"));

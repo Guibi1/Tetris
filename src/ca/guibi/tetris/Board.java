@@ -20,31 +20,34 @@ import java.awt.geom.Rectangle2D;
 
 
 public class Board extends JPanel implements KeyListener {
-    Board(BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats scorePanel)
+    Board(BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
     {
+        this.nextBlockShowcase = nextBlockShowcase;
+        this.holdBlockShowcase = holdBlockShowcase;
+        this.statsPanel = statsPanel;
+
+        // Fill the gameBoard
+        for (Blocks.Color[] a : gameBoard)
+            Arrays.fill(a, Blocks.Color.None);
+
+        // Layout
         setLayout(new FlowLayout());
         drawPanel = new DrawPanel();
         add(drawPanel);
         validate();
-
-        this.nextBlockShowcase = nextBlockShowcase;
-        this.holdBlockShowcase = holdBlockShowcase;
-        this.scorePanel = scorePanel;
-
-        for (Blocks.Color[] a : gameBoard)
-            Arrays.fill(a, Blocks.Color.None);
     }
 
     void NewGame()
     {
+        // Reset the gameBoard
         for (Blocks.Color[] a : gameBoard)
             Arrays.fill(a, Blocks.Color.None);
 
         paused = false;
-        scorePanel.setScore(0);
+        statsPanel.setScore(0);
+        statsPanel.setLinesCleared(0);
         generateBlock = true;
         currentBlock = Blocks.Type.None;
-        nextBlockShowcase.showcaseRandomBlock();
 
         Run();
     }
@@ -57,7 +60,7 @@ public class Board extends JPanel implements KeyListener {
             while (!paused)
             {
                 // Checks for completed line
-                int completedLines = 0;
+                int clearedLines = 0;
                 for (int i = boardY - 1; i >= 0;)
                 {
                     if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
@@ -72,37 +75,36 @@ public class Board extends JPanel implements KeyListener {
                             gameBoard[j] = temp;
                         }
         
-                        completedLines += 1;
+                        clearedLines += 1;
                     }
 
                     else i -= 1;
                 }
 
-                switch (completedLines) {
-                    case 0:
-                        break;
-
-                    case 1:
-                        scorePanel.addScore(getLevel() * 40);
-                        break;
-
-                    case 2:
-                        scorePanel.addScore(getLevel() * 100);
-                        break;
-
-                    case 3:
-                        scorePanel.addScore(getLevel() * 300);
-                        break;
-
-                    default:
-                        scorePanel.addScore(getLevel() * 1200);
-                        break;
-                }
-
-                linesCompleted += completedLines;
-
-                if (completedLines != 0)
+                if (clearedLines > 0)
+                {
+                    // Give points based on the number of line completed
+                    switch (clearedLines) {
+                        case 1:
+                            statsPanel.addScore(statsPanel.getLevel() * 40);
+                            break;
+    
+                        case 2:
+                            statsPanel.addScore(statsPanel.getLevel() * 100);
+                            break;
+    
+                        case 3:
+                            statsPanel.addScore(statsPanel.getLevel() * 300);
+                            break;
+    
+                        default:
+                            statsPanel.addScore(statsPanel.getLevel() * 1200);
+                            break;
+                    }
+    
+                    statsPanel.addLinesCleared(clearedLines);
                     repaintBoard(true);
+                }
 
                 else
                 {
@@ -110,10 +112,11 @@ public class Board extends JPanel implements KeyListener {
                     if (generateBlock)
                     {
                         generateBlock = false;
-                        currentBlock = nextBlockShowcase.getShowcasedBlock();
-                        currentBlockRotation = nextBlockShowcase.getShowcasedBlockRotation();
+                        currentBlock = nextBlockShowcase.getBlockAt(0);
+                        currentBlockRotation = nextBlockShowcase.getRotationAt(0);
                         currentBlockOffset.setLocation((boardX - currentBlock.getSize(currentBlockRotation).width) / 2, 0 - currentBlock.getSize(currentBlockRotation).height);
-                        nextBlockShowcase.showcaseRandomBlock();
+                        nextBlockShowcase.removeBlockAt(0);
+                        nextBlockShowcase.addRandomBlock();
                         repaintBoard();
                     }
 
@@ -158,7 +161,7 @@ public class Board extends JPanel implements KeyListener {
                 }
                 
                 try {
-                    Thread.sleep((getLevel() < 150) ? Math.round(80 * Math.cos(getLevel() / (15 * Math.PI)) + 120) : 40);
+                    Thread.sleep((statsPanel.getLevel() < 150) ? Math.round(80 * Math.cos(statsPanel.getLevel() / (15 * Math.PI)) + 120) : 40);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
@@ -221,11 +224,6 @@ public class Board extends JPanel implements KeyListener {
             }
         }).start();
     }
-
-    public int getLevel()
-    {
-        return 1 + linesCompleted % 10;
-    }
     
     @Override
     public void keyPressed(KeyEvent e) {
@@ -286,7 +284,7 @@ public class Board extends JPanel implements KeyListener {
                 currentBlockOffset.setLocation(blockIndicatorOffset);
 
                 if (blocksFallen >= 5)
-                    scorePanel.addScore(blocksFallen * 2);
+                    statsPanel.addScore(blocksFallen * 2);
 
                 repaintBoard(true);
                 break;
@@ -297,22 +295,20 @@ public class Board extends JPanel implements KeyListener {
                     break;
                 
                 // If there is no holded block
-                if (holdBlockShowcase.getShowcasedBlock() == Blocks.Type.None)
+                if (holdBlockShowcase.getBlockAt(0) == Blocks.Type.None)
                 {
-                    holdBlockShowcase.setShowcasedBlock(currentBlock);
-                    holdBlockShowcase.setShowcasedBlockRotation(currentBlockRotation);
-
+                    holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
                     generateBlock = true;
                 }
 
                 else
                 {
                     // Shifts the block to the left if it goes outside of the screen to the right
-                    int newX = Math.min(currentBlockOffset.x, boardX - holdBlockShowcase.getShowcasedBlock().getSize(holdBlockShowcase.getShowcasedBlockRotation()).width);
+                    int newX = Math.min(currentBlockOffset.x, boardX - holdBlockShowcase.getBlockAt(0).getSize(holdBlockShowcase.getRotationAt(0)).width);
                     
                     // Test if the holded block's points can fit in the game
                     boolean canSwitch = true;
-                    for (Point p : holdBlockShowcase.getShowcasedBlock().getPoints(holdBlockShowcase.getShowcasedBlockRotation()))
+                    for (Point p : holdBlockShowcase.getBlockAt(0).getPoints(holdBlockShowcase.getRotationAt(0)))
                     {
                         // Ignore the point if it is too high
                         if (currentBlockOffset.y + p.y < 0)
@@ -323,16 +319,16 @@ public class Board extends JPanel implements KeyListener {
                             canSwitch = false;
                     }
 
-                    // TODO: Smart offsetto fit
+                    // TODO: Smart offset to fit
 
                     // Switch the blocks if it can
                     if (canSwitch)
                     {
-                        Blocks.Type tempBlock = holdBlockShowcase.getShowcasedBlock();
-                        int tempRotation = holdBlockShowcase.getShowcasedBlockRotation();
-    
-                        holdBlockShowcase.setShowcasedBlock(currentBlock);
-                        holdBlockShowcase.setShowcasedBlockRotation(currentBlockRotation);
+                        Blocks.Type tempBlock = holdBlockShowcase.getBlockAt(0);
+                        int tempRotation = holdBlockShowcase.getRotationAt(0);
+
+                        holdBlockShowcase.removeBlockAt(0);
+                        holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
                         
                         currentBlock = tempBlock;
                         currentBlockRotation = tempRotation;
@@ -363,7 +359,7 @@ public class Board extends JPanel implements KeyListener {
                         canMove = false;
                 }
                 
-                // TODO: Smart offsetto fit
+                // TODO: Smart offset to fit
 
                 if (canMove)
                 {
@@ -471,18 +467,18 @@ public class Board extends JPanel implements KeyListener {
         }
     }
 
+
     int boardX = 10;
     int boardY = 20;
     private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
     private boolean paused = false;
-    private int linesCompleted = 0;
 
     private boolean generateBlock = true;
     private final BlockShowcase nextBlockShowcase;
     private final BlockShowcase holdBlockShowcase;
-    private final GameStats scorePanel;
+    private final GameStats statsPanel;
 
     private Blocks.Type currentBlock = Blocks.Type.None;
     private int currentBlockRotation = 0;
@@ -496,13 +492,13 @@ public class Board extends JPanel implements KeyListener {
     {
         DrawPanel()
         {
-            setPreferredSize(new Dimension(300, 650));
             setBorder(new LineBorder(Color.decode("#373D43"), strokeSize));
             setBackground(Color.decode("#121417"));
         }
 
         @Override
-        public Dimension getPreferredSize() {
+        public Dimension getPreferredSize()
+        {
             double aspectRatio = 1.0 / 2.0;
 
             Dimension d = getParent().getSize();

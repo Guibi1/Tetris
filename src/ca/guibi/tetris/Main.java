@@ -7,6 +7,7 @@ public class Main {
         // TODO: Add menus
 
         GameWindow gw = new GameWindow();
+        gw.setVisible(true);
         gw.game.NewGame();
     }
 }

@@ -13,8 +13,8 @@ public class GameWindow extends JFrame {
     GameWindow()
     {
         // Window parameters
-        setSize(350, 700);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setSize(550, 700);
+        //setExtendedState(JFrame.MAXIMIZED_BOTH);
         setTitle("Tetris");
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -30,14 +30,14 @@ public class GameWindow extends JFrame {
         layoutLeft.setLayout(new BoxLayout(layoutLeft, BoxLayout.Y_AXIS));
         add(layoutLeft, BorderLayout.LINE_START);
 
-        holdBlockPanel = new BlockShowcase("Hold", 30);
+        holdBlockPanel = new BlockShowcase("Hold", 30, 1, false);
         layoutLeft.add(holdBlockPanel);
         
         scorePanel = new GameStats();
         layoutLeft.add(scorePanel);
 
         // Right
-        nextBlockPanel = new BlockShowcase("Next block", 30);
+        nextBlockPanel = new BlockShowcase("Next blocks", 30, 3, true);
         add(nextBlockPanel, BorderLayout.LINE_END);
 
         // Centre
@@ -45,9 +45,7 @@ public class GameWindow extends JFrame {
         addKeyListener(game);
         add(game, BorderLayout.CENTER);
 
-        // All done !
         validate();
-        setVisible(true);
     }
 
 

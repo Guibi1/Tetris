@@ -31,7 +31,10 @@ public class Board extends JPanel implements KeyListener {
             Arrays.fill(a, Blocks.Color.None);
 
         // Layout
-        setLayout(new FlowLayout());
+        FlowLayout layout = new FlowLayout();
+        layout.setVgap(1);
+        setLayout(layout);
+        
         drawPanel = new DrawPanel();
         add(drawPanel);
         validate();
@@ -335,10 +338,11 @@ public class Board extends JPanel implements KeyListener {
                         currentBlock = tempBlock;
                         currentBlockRotation = tempRotation;
                         currentBlockOffset.x = newX;
+                        
+                        repaintBoard(true);
                     }
                 }
 
-                repaintBoard(true);
                 break;
         
             case KeyEvent.VK_SPACE:
@@ -470,8 +474,9 @@ public class Board extends JPanel implements KeyListener {
     }
 
 
-    int boardX = 10;
-    int boardY = 20;
+    public final int boardX = 10;
+    public final int boardY = 20;
+
     private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
@@ -505,8 +510,8 @@ public class Board extends JPanel implements KeyListener {
 
             Dimension d = getParent().getSize();
             int newHeight = (int) Math.round(Math.min(
-                d.height - 10,
-                (d.width - 10) * (1 / aspectRatio)
+                d.height - 30,
+                d.width / aspectRatio - 30
             ));
 
             return new Dimension((int) Math.round(newHeight * aspectRatio), newHeight);

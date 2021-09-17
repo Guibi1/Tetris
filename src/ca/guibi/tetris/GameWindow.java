@@ -2,44 +2,51 @@ package ca.guibi.tetris;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.BoxLayout;
+
+import javax.swing.GroupLayout;
 
 import java.awt.Toolkit;
 import java.awt.Dimension;
-import java.awt.BorderLayout;
 
 
 public class GameWindow extends JFrame {
     GameWindow()
     {
-        // Main layout
-        setLayout(new BorderLayout());
-
-        // Left
-        layoutLeft = new JPanel();
-        layoutLeft.setLayout(new BoxLayout(layoutLeft, BoxLayout.Y_AXIS));
-        add(layoutLeft, BorderLayout.LINE_START);
-
-        holdBlockPanel = new BlockShowcase("Hold", 30, 1, false);
-        layoutLeft.add(holdBlockPanel);
-        
-        scorePanel = new GameStats();
-        layoutLeft.add(scorePanel);
-
-        // Right
-        nextBlockPanel = new BlockShowcase("Next blocks", 30, 3, true);
-        add(nextBlockPanel, BorderLayout.LINE_END);
-
-        // Centre
-        game = new Board(nextBlockPanel, holdBlockPanel, scorePanel);
+        nextBlockPanel = new BlockShowcase(this, "Next blocks", 3, true);
+        holdBlockPanel = new BlockShowcase(this, "Hold", 1, false);
+        statsPanel = new GameStats();
+        game = new Board(nextBlockPanel, holdBlockPanel, statsPanel);
         addKeyListener(game);
-        add(game, BorderLayout.CENTER);
+        
+        GroupLayout layout = new GroupLayout(getContentPane());
+        setLayout(layout);
 
-        validate();
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
+
+        layout.setHorizontalGroup(
+            layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(holdBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                    .addComponent(statsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                )
+                .addComponent(game, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                .addComponent(nextBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+        );
+        
+        layout.setVerticalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(holdBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                    .addComponent(statsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                )
+                .addComponent(game, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+                .addComponent(nextBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+        );
 
         // Window parameters
         setMinimumSize(new Dimension(
-            game.getMinimumSize().width + holdBlockPanel.getMinimumSize().width + nextBlockPanel.getMinimumSize().width + 100,
+            game.getMinimumSize().width + holdBlockPanel.getMinimumSize().width + nextBlockPanel.getMinimumSize().width,
             Math.max(game.getMinimumSize().height, Math.max(holdBlockPanel.getMinimumSize().height, nextBlockPanel.getMinimumSize().height))
         ));
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -49,13 +56,21 @@ public class GameWindow extends JFrame {
         setLocation((screenSize.width - getSize().width) / 2, (screenSize.height - getSize().height) / 2);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        validate();
     }
 
+    public int getBlockSizePixel()
+    {
+        if (game != null)
+            return game.getPreferredSize().width / game.boardX;
+
+        return 30;
+    }
 
     Board game;
     BlockShowcase nextBlockPanel;
     BlockShowcase holdBlockPanel;
-    GameStats scorePanel;
+    GameStats statsPanel;
 
     JPanel layoutLeft;
 }

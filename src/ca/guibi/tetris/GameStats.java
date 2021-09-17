@@ -2,14 +2,16 @@ package ca.guibi.tetris;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.BoxLayout;
 
 
 public class GameStats extends JPanel {
     GameStats()
     {
         scoreLabel = new JLabel(Integer.toString(score));
+        
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         add(scoreLabel);
-        validate();
     }
 
     public void setScore(int newScore)
@@ -25,7 +27,7 @@ public class GameStats extends JPanel {
 
     public void addScore(int points)
     {
-        setScore(score += points);
+        setScore(score + points);
     }
 
     public int getLevel()

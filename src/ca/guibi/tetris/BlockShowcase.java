@@ -16,26 +16,23 @@ import java.awt.BasicStroke;
 
 
 public class BlockShowcase extends JPanel {
-    BlockShowcase(String title, int blockSize, int maxBlockCount, boolean generateBlocks)
-    {
+    BlockShowcase(GameWindow gw, String title, int maxBlockCount, boolean generateBlocks)
+    {        
+        showcasedBlocks = new Vector<Block>();
+        
         // blockCount can't be less than 1
         this.maxBlockCount = Math.max(1, maxBlockCount);
         
-        this.blockSize = blockSize;
-        showcasedBlocks = new Vector<Block>();
+        titleLabel = new JLabel(title);
+        titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+
+        drawPanel = new DrawPanel(gw);
         
         // Layout
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        titleLabel = new JLabel(title);
-        titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         add(titleLabel);
-
-        drawPanel = new DrawPanel();
         add(drawPanel);
         
-        validate();
-        setMinimumSize(drawPanel.getPreferredSize());
         
         // Fills the vector of random blocs
         if (generateBlocks)
@@ -45,13 +42,8 @@ public class BlockShowcase extends JPanel {
 
     public void addBlock(Blocks.Type blockType, int rotation)
     {
-        // Center the block
-        Point offset = new Point(
-            (int) Math.round((ratioWidth - blockType.getSize(rotation).width) * blockSize / 2),
-            (int) Math.round((ratioHeight - blockType.getSize(rotation).height) * blockSize / 2));
-        
         // Add the block to the vector
-        Block newBlock = new Block(blockType, rotation, offset);
+        Block newBlock = new Block(blockType, rotation);
         showcasedBlocks.add(newBlock);
 
         // Repaint the newly added block
@@ -95,11 +87,11 @@ public class BlockShowcase extends JPanel {
         return 0;
     }
 
+
     private final double ratioWidth = 5;
     private final double ratioHeight = 5.5;
 
     private final int maxBlockCount;
-    private int blockSize;
     
     private JLabel titleLabel;
     private DrawPanel drawPanel;
@@ -107,26 +99,44 @@ public class BlockShowcase extends JPanel {
     private Random random = new Random(System.currentTimeMillis());
     private Vector<Block> showcasedBlocks;
 
+
     private class Block
     {
-        Block(Blocks.Type type, int rotation, Point offset)
+        Block(Blocks.Type type, int rotation)
         {
             this.type = type;
             this.rotation = rotation;
-            this.offset = offset;
         }
 
         public Blocks.Type type;
         public int rotation;
-        public Point offset;
     }
+
 
     private class DrawPanel extends JPanel
     {
-        DrawPanel()
+        DrawPanel(GameWindow gw)
         {
-            setPreferredSize(new Dimension((int) Math.round(blockSize * ratioWidth), (int) Math.round(blockSize * ratioHeight * maxBlockCount)));
+            this.gw = gw;
             setBackground(Color.decode("#121417"));
+        }
+
+        @Override
+        public Dimension getPreferredSize()
+        {
+            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
+        }
+
+        @Override
+        public Dimension getMaximumSize()
+        {
+            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
+        }
+
+        @Override
+        public Dimension getMinimumSize()
+        {
+            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
         }
 
         public void paintBlocks(int index)
@@ -140,8 +150,8 @@ public class BlockShowcase extends JPanel {
             // Repaint only the block at the specified index
             else
             {
-                int width = (int) Math.round(blockSize * ratioWidth);
-                int height = (int) Math.round(blockSize * ratioHeight);
+                int width = (int) Math.round(gw.getBlockSizePixel() * ratioWidth);
+                int height = (int) Math.round(gw.getBlockSizePixel() * ratioHeight);
                 
                 java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(height * index, 0, width, height * (index + 1))));
             }
@@ -153,53 +163,58 @@ public class BlockShowcase extends JPanel {
             super.paintComponent(g);
             Graphics2D g2D = (Graphics2D) g;
 
+            int blockSizePixel = gw.getBlockSizePixel();
+
             for (int i = 0; i < showcasedBlocks.size(); i++)
             {
                 Blocks.Type block = showcasedBlocks.elementAt(i).type;
                 int rotation = showcasedBlocks.elementAt(i).rotation;
-                Point offset = new Point(showcasedBlocks.elementAt(i).offset);
-
-                offset.y += (int) Math.round(blockSize * ratioHeight * i);
+                // Center the block
+                Point offset = new Point(
+                    (int) Math.round((ratioWidth - block.getSize(rotation).width) * blockSizePixel / 2),
+                    (int) Math.round((ratioHeight - block.getSize(rotation).height) * blockSizePixel / 2 + (blockSizePixel * ratioHeight * i)));
 
                 for (Point p : block.getPoints(rotation))
                 {
                     g2D.setColor(block.getJavaColor());
                     g2D.fillRect(
-                        p.x * blockSize + offset.x,
-                        p.y * blockSize + offset.y,
-                        blockSize,
-                        blockSize
+                        p.x * blockSizePixel + offset.x,
+                        p.y * blockSizePixel + offset.y,
+                        blockSizePixel,
+                        blockSizePixel
                     );
 
                     // Lines
                     g2D.setStroke(new BasicStroke(2));
                     g2D.setColor(Color.decode("#373D43"));
                     g2D.drawLine(
-                        p.x * blockSize + offset.x,
-                        p.y * blockSize + offset.y,
-                        (p.x + 1) * blockSize + offset.x,
-                        p.y * blockSize + offset.y
+                        p.x * blockSizePixel + offset.x,
+                        p.y * blockSizePixel + offset.y,
+                        (p.x + 1) * blockSizePixel + offset.x,
+                        p.y * blockSizePixel + offset.y
                     );
                     g2D.drawLine(
-                        p.x * blockSize + offset.x,
-                        p.y * blockSize + offset.y,
-                        p.x * blockSize + offset.x,
-                        (p.y + 1) * blockSize + offset.y
+                        p.x * blockSizePixel + offset.x,
+                        p.y * blockSizePixel + offset.y,
+                        p.x * blockSizePixel + offset.x,
+                        (p.y + 1) * blockSizePixel + offset.y
                     );
                     g2D.drawLine(
-                        p.x * blockSize + offset.x + blockSize,
-                        p.y * blockSize + offset.y,
-                        (p.x + 1) * blockSize + offset.x,
-                        (p.y + 1) * blockSize + offset.y
+                        (p.x + 1) * blockSizePixel + offset.x,
+                        p.y * blockSizePixel + offset.y,
+                        (p.x + 1) * blockSizePixel + offset.x,
+                        (p.y + 1) * blockSizePixel + offset.y
                     );
                     g2D.drawLine(
-                        p.x * blockSize + offset.x,
-                        p.y * blockSize + offset.y + blockSize,
-                        (p.x + 1) * blockSize + offset.x,
-                        (p.y + 1) * blockSize + offset.y
+                        p.x * blockSizePixel + offset.x,
+                        (p.y + 1) * blockSizePixel + offset.y,
+                        (p.x + 1) * blockSizePixel + offset.x,
+                        (p.y + 1) * blockSizePixel + offset.y
                     );
                 }
             }
         }
+
+        private final GameWindow gw;
     }
 }

@@ -1,5 +1,10 @@
 package ca.guibi.tetris;
 
+import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.BoxLayout;
@@ -8,17 +13,65 @@ import javax.swing.BoxLayout;
 public class GameStats extends JPanel {
     GameStats()
     {
-        scoreLabel = new JLabel(Integer.toString(score));
+        // Layout
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        scoreLabel = new JLabel();
+        scoreLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         FontManager.setComponentFont(scoreLabel);
+        setScore(0);
         add(scoreLabel);
+        
+        bestScoreLabel = new JLabel();
+        bestScoreLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+        FontManager.setComponentFont(bestScoreLabel);
+        setBestScore(0);
+        add(bestScoreLabel);
+
+        loadBestScore();
+    }
+
+    public void loadBestScore()
+    {
+        try
+        {
+            ByteBuffer bb = ByteBuffer.wrap(Files.readAllBytes(Paths.get(scoreFilePath)));
+            setBestScore(bb.getInt());
+
+        } catch (IOException e) {
+            System.out.println("Can't read best score.");
+        }
+    }
+
+    public void saveBestScore()
+    {
+        if (score > bestScore)
+        {
+            setBestScore(score);
+            
+            try
+            {
+                ByteBuffer bb = ByteBuffer.allocate(4);
+                bb.putInt(score);
+                
+                Files.write(Paths.get(scoreFilePath), bb.array());
+                
+            } catch (IOException e) {
+                System.out.println("Can't save best score.");
+            }
+        }
+    }
+
+    public void setBestScore(int newBestScore)
+    {
+        bestScore = newBestScore;
+        bestScoreLabel.setText("Best score: " + Integer.toString(bestScore));
     }
 
     public void setScore(int newScore)
     {
         score = newScore;
-        scoreLabel.setText(Integer.toString(score));
+        scoreLabel.setText("Score: " + Integer.toString(score));
     }
 
     public int getScore()
@@ -53,8 +106,13 @@ public class GameStats extends JPanel {
     }
 
 
+    private final String scoreFilePath = "bestScore.dat";
+
     private int linesClearedCount = 0;
+
     private int score = 0;
-    
     private JLabel scoreLabel;
+
+    private int bestScore = 0;
+    private JLabel bestScoreLabel;
 }

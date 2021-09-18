@@ -24,7 +24,7 @@ public class Board extends JPanel implements KeyListener {
     {
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
-        this.statsPanel = statsPanel;
+        this.gameStats = statsPanel;
 
         // Fill the gameBoard
         for (Blocks.Color[] a : gameBoard)
@@ -48,9 +48,9 @@ public class Board extends JPanel implements KeyListener {
         for (Blocks.Color[] a : gameBoard)
             Arrays.fill(a, Blocks.Color.None);
 
-        paused = false;
-        statsPanel.setScore(0);
-        statsPanel.setLinesCleared(0);
+        gameOver = false;
+        gameStats.setScore(0);
+        gameStats.setLinesCleared(0);
         generateBlock = true;
         currentBlock = Blocks.Type.None;
 
@@ -62,7 +62,7 @@ public class Board extends JPanel implements KeyListener {
         RunBlockIndicator();
         
         new Thread(() -> {
-            while (!paused)
+            while (!gameOver)
             {
                 // Checks for completed line
                 int clearedLines = 0;
@@ -91,23 +91,23 @@ public class Board extends JPanel implements KeyListener {
                     // Give points based on the number of line completed
                     switch (clearedLines) {
                         case 1:
-                            statsPanel.addScore(statsPanel.getLevel() * 40);
+                            gameStats.addScore(gameStats.getLevel() * 40);
                             break;
     
                         case 2:
-                            statsPanel.addScore(statsPanel.getLevel() * 100);
+                            gameStats.addScore(gameStats.getLevel() * 100);
                             break;
     
                         case 3:
-                            statsPanel.addScore(statsPanel.getLevel() * 300);
+                            gameStats.addScore(gameStats.getLevel() * 300);
                             break;
     
                         default:
-                            statsPanel.addScore(statsPanel.getLevel() * 1200);
+                            gameStats.addScore(gameStats.getLevel() * 1200);
                             break;
                     }
     
-                    statsPanel.addLinesCleared(clearedLines);
+                    gameStats.addLinesCleared(clearedLines);
                     repaintBoard(true);
                 }
 
@@ -153,7 +153,7 @@ public class Board extends JPanel implements KeyListener {
                                     continue;
 
                                 if (currentBlockOffset.y + p.y <= 0)
-                                    paused = true;
+                                    gameOver = true;
                                 
                                 gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x] = currentBlock.getColor();
                             }
@@ -166,13 +166,14 @@ public class Board extends JPanel implements KeyListener {
                 }
                 
                 try {
-                    Thread.sleep((statsPanel.getLevel() < 150) ? Math.round(80 * Math.cos(statsPanel.getLevel() / (15 * Math.PI)) + 120) : 40);
+                    Thread.sleep((gameStats.getLevel() < 150) ? Math.round(80 * Math.cos(gameStats.getLevel() / (15 * Math.PI)) + 120) : 40);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
             }
 
             System.out.println("Game over.");
+            gameStats.saveBestScore();
         }).start();
     }
 
@@ -188,7 +189,7 @@ public class Board extends JPanel implements KeyListener {
             float steps = (maxAlpha - minAlpha) / stepsTiming;
             alphaBlockIndicator = minAlpha;
             
-            while (!paused)
+            while (!gameOver)
             {
                 if (alphaGoingUp)
                 {
@@ -289,7 +290,7 @@ public class Board extends JPanel implements KeyListener {
                 currentBlockOffset.setLocation(blockIndicatorOffset);
 
                 if (blocksFallen >= 5)
-                    statsPanel.addScore(blocksFallen * 2);
+                    gameStats.addScore(blocksFallen * 2);
 
                 repaintBoard(true);
                 break;
@@ -480,12 +481,12 @@ public class Board extends JPanel implements KeyListener {
     private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
-    private boolean paused = false;
+    private boolean gameOver = false;
 
     private boolean generateBlock = true;
     private final BlockShowcase nextBlockShowcase;
     private final BlockShowcase holdBlockShowcase;
-    private final GameStats statsPanel;
+    private final GameStats gameStats;
 
     private Blocks.Type currentBlock = Blocks.Type.None;
     private int currentBlockRotation = 0;

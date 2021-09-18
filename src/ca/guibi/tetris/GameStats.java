@@ -11,6 +11,7 @@ public class GameStats extends JPanel {
         scoreLabel = new JLabel(Integer.toString(score));
         
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        FontManager.setComponentFont(scoreLabel);
         add(scoreLabel);
     }
 

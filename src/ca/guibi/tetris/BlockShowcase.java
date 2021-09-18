@@ -25,6 +25,7 @@ public class BlockShowcase extends JPanel {
         
         titleLabel = new JLabel(title);
         titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
+        FontManager.setComponentFont(titleLabel);
 
         drawPanel = new DrawPanel(gw);
         

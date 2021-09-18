@@ -1,12 +1,12 @@
-package ca.guibi.tetris;
+package main.java.Tetris;
 
 
-public class Main {
+public class App {
 
     public static void main(String[] args) {
         // TODO: Add menus
 
-        if (!FontManager.loadFont("resources/Merubot-regular.ttf", 32.0f))
+        if (FontManager.loadFont("resources/Merubot-regular.ttf", 32.0f))
             return;
 
         GameWindow gw = new GameWindow();

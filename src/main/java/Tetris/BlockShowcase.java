@@ -1,4 +1,4 @@
-package ca.guibi.tetris;
+package main.java.Tetris;
 
 import java.util.Random;
 import java.util.Vector;

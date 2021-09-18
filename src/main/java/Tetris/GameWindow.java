@@ -1,4 +1,4 @@
-package ca.guibi.tetris;
+package main.java.Tetris;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

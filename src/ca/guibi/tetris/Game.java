@@ -1,9 +1,13 @@
 package ca.guibi.tetris;
 
 import javax.swing.JPanel;
+import javax.swing.JButton;
 import javax.swing.GroupLayout;
 
+import java.awt.Dimension;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 
 public class Game extends JPanel {
@@ -14,6 +18,18 @@ public class Game extends JPanel {
         gameStats = new GameStats();
         board = new Board(window, nextBlockShowcase, holdBlockShowcase, gameStats);
         addKeyListener(board);
+
+        
+        pauseButton = new JButton("Pause");
+        FontManager.setComponentFont(pauseButton);
+        pauseButton.setPreferredSize(new Dimension(200, 0));
+        pauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                board.togglePause();
+            }
+        });
 
         // Layout
         JPanel centeredPanel = new JPanel();
@@ -30,6 +46,7 @@ public class Game extends JPanel {
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addComponent(nextBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -40,6 +57,7 @@ public class Game extends JPanel {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addComponent(nextBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -59,6 +77,8 @@ public class Game extends JPanel {
         return 30;
     }
 
+
+    private JButton pauseButton;
 
     private Board board;
     private BlockShowcase nextBlockShowcase;

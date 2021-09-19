@@ -1,10 +1,12 @@
 package ca.guibi.tetris;
 
 import java.util.Arrays;
-
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
@@ -13,7 +15,7 @@ import java.awt.Point;
 import java.awt.Graphics;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.FlowLayout;
+import java.awt.CardLayout;
 import java.awt.BasicStroke;
 import java.awt.AlphaComposite;
 import java.awt.geom.Rectangle2D;
@@ -26,24 +28,30 @@ public class Board extends JPanel implements KeyListener {
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
+        resumeScheduler = new ScheduledThreadPoolExecutor(1);
 
         // Fill the gameBoard
         for (Blocks.Color[] a : gameBoard)
             Arrays.fill(a, Blocks.Color.None);
 
         // Layout
-        FlowLayout layout = new FlowLayout();
+        layout = new CardLayout();
         layout.setVgap(1);
         setLayout(layout);
         
         drawPanel = new DrawPanel();
-        add(drawPanel);
-        validate();
+        add(drawPanel, "game");
+
+        pausedPanel = new JPanel();
+        JLabel labelPause = new JLabel("Game paused");
+        FontManager.setComponentFont(labelPause, 50f);
+        pausedPanel.add(labelPause);
+        add(pausedPanel, "pause");
 
         setMinimumSize(new Dimension(boardX * 40, boardY * 40));
     }
 
-    void newGame()
+    public void newGame()
     {
         // Reset the gameBoard
         for (Blocks.Color[] a : gameBoard)
@@ -56,14 +64,33 @@ public class Board extends JPanel implements KeyListener {
         currentBlock = Blocks.Type.None;
 
         Run();
+        RunBlockIndicator();
     }
 
-    void Run()
+    public void togglePause()
     {
-        RunBlockIndicator();
+        gamePaused = !gamePaused;
         
+        if (gamePaused)
+        {
+            layout.show(this, "pause");
+        }
+        
+        else
+        {
+            layout.show(this, "game");
+            
+            resumeScheduler.shutdownNow();
+            resumeScheduler = new ScheduledThreadPoolExecutor(1);
+            resumeScheduler.schedule(new Thread(() -> Run()), 1200, TimeUnit.MILLISECONDS);
+            RunBlockIndicator();
+        }
+    }
+
+    private void Run()
+    {
         new Thread(() -> {
-            while (!gameOver)
+            while (!gameOver && !gamePaused)
             {
                 // Checks for completed line
                 int clearedLines = 0;
@@ -166,6 +193,7 @@ public class Board extends JPanel implements KeyListener {
                     }
                 }
                 
+                // Sleep for a time based on the current level
                 try {
                     Thread.sleep((gameStats.getLevel() < 150) ? Math.round(80 * Math.cos(gameStats.getLevel() / (15 * Math.PI)) + 120) : 40);
                 } catch (InterruptedException ex) {
@@ -173,11 +201,14 @@ public class Board extends JPanel implements KeyListener {
                 }
             }
 
-            System.out.println("Game over.");
-            gameStats.saveBestScore();
-            window.showMenu();
+            if (gameOver)
+            {
+                System.out.println("Game over.");
+                gameStats.saveBestScore();
+                window.showMenu();
 
-            // TODO: show an end screen
+                // TODO: show an end screen
+            }
         }).start();
     }
 
@@ -193,8 +224,9 @@ public class Board extends JPanel implements KeyListener {
             float steps = (maxAlpha - minAlpha) / stepsTiming;
             alphaBlockIndicator = minAlpha;
             
-            while (!gameOver)
+            while (!gameOver && !gamePaused)
             {
+                // If the alpha needs to go up
                 if (alphaGoingUp)
                 {
                     alphaBlockIndicator += steps;
@@ -206,6 +238,7 @@ public class Board extends JPanel implements KeyListener {
                     }
                 }
                 
+                // If the alpha needs to go down
                 else
                 {
                     alphaBlockIndicator -= steps;
@@ -217,6 +250,7 @@ public class Board extends JPanel implements KeyListener {
                     }
                 }
 
+                // Repaint the indicator
                 java.awt.EventQueue.invokeLater(new Thread(() -> 
                     drawPanel.paintImmediately(
                         blockIndicatorOffset.x * drawPanel.getSize().width / boardX,
@@ -226,6 +260,7 @@ public class Board extends JPanel implements KeyListener {
                     )
                 ));
                 
+                // Sleep until next alpha update
                 try {
                     Thread.sleep(stepsTiming);
                 } catch (InterruptedException ex) {
@@ -234,154 +269,192 @@ public class Board extends JPanel implements KeyListener {
             }
         }).start();
     }
+
+    private void moveCurrentBlockRight()
+    {
+        boolean canMove = true;
+        for (Point p : currentBlock.getPoints(currentBlockRotation))
+        {
+            // Can't move to the right if it makes it move outside of the board
+            if (currentBlockOffset.x + p.x >= boardX - 1)
+                canMove = false;
+
+            // Ignore the point if it is too high up
+            else if (currentBlockOffset.y + p.y < 0)
+                continue;
+            
+            // Check if the point at the right isn't empty
+            else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
+                canMove = false;
+        }
+        
+        if (canMove)
+        {
+            currentBlockOffset.translate(1, 0);
+            repaintBoard();
+        }
+    }
+
+    private void moveCurrentBlockLeft()
+    {
+        boolean canMove = true;
+        for (Point p : currentBlock.getPoints(currentBlockRotation))
+        {
+            // Can't move to the left if it makes it move out of the board
+            if (currentBlockOffset.x + p.x <= 0)
+                canMove = false;
+            
+            // Ignore the point if it is too high up
+            else if (currentBlockOffset.y + p.y < 0)
+                continue;
+
+            // Check if the point at the left isn't empty
+            else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
+                canMove = false;
+        }
+        
+        if (canMove)
+        {
+            currentBlockOffset.translate(-1, 0);
+            repaintBoard();
+        }
+    }
+
+    private void moveCurrentBlockHardFall()
+    {
+        int blocksFallen = blockIndicatorOffset.y - currentBlockOffset.y;
+        currentBlockOffset.setLocation(blockIndicatorOffset);
+
+        if (blocksFallen >= 5)
+            gameStats.addScore(blocksFallen * 2);
+
+        repaintBoard(true);
+    }
+
+    private void rotateCurrentBlock()
+    {
+        // Breaks if the rotation makes the block go outside of the board on the Y axis
+        if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation + 90).height > boardY - 1)
+            return;
+
+        // Shifts the block to the left if it goes outside of the screen to the right
+        int newX = Math.min(currentBlockOffset.x, boardX - currentBlock.getSize(currentBlockRotation + 90).width);
+
+        boolean canMove = true;
+        for (Point p : currentBlock.getPoints(currentBlockRotation + 90))
+        {
+            // Ignore the point if it is too high
+            if (currentBlockOffset.y + p.y < 0)
+                continue;
+
+            // Checks if the rotated point isn't empty
+            if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
+                canMove = false;
+        }
+
+        // TODO: Smart offset to fit
+
+        if (canMove)
+        {
+            currentBlockRotation += 90;
+            currentBlockOffset.x = newX;
+            repaintBoard(true);
+        }
+    }
+
+    private void holdCurrentBlock()
+    {
+        // Don't switch if there is no current block
+        if (currentBlock == Blocks.Type.None)
+            return;
+    
+        // If there is no holded block
+        if (holdBlockShowcase.getBlockAt(0) == Blocks.Type.None)
+        {
+            holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
+            generateBlock = true;
+        }
+
+        else
+        {
+            // Shifts the block to the left if it goes outside of the screen to the right
+            int newX = Math.min(currentBlockOffset.x, boardX - holdBlockShowcase.getBlockAt(0).getSize(holdBlockShowcase.getRotationAt(0)).width);
+            
+            // Test if the holded block's points can fit in the game
+            boolean canSwitch = true;
+            for (Point p : holdBlockShowcase.getBlockAt(0).getPoints(holdBlockShowcase.getRotationAt(0)))
+            {
+                // Ignore the point if it is too high
+                if (currentBlockOffset.y + p.y < 0)
+                    continue;
+                
+                // Checks if the switched point isn't empty
+                if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
+                    canSwitch = false;
+            }
+
+            // TODO: Smart offset to fit
+
+            // Switch the blocks if it can
+            if (canSwitch)
+            {
+                Blocks.Type tempBlock = holdBlockShowcase.getBlockAt(0);
+                int tempRotation = holdBlockShowcase.getRotationAt(0);
+
+                holdBlockShowcase.removeBlockAt(0);
+                holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
+                
+                currentBlock = tempBlock;
+                currentBlockRotation = tempRotation;
+                currentBlockOffset.x = newX;
+                
+                repaintBoard(true);
+            }
+        }
+    }
     
     @Override
-    public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode())
+    public void keyPressed(KeyEvent e)
+    {
+        // Do nothing if the game is over
+        if (gameOver)
+            return;
+
+        // Key to toggle pause
+        else if (e.getKeyCode() == KeyEvent.VK_P)
+            togglePause();
+
+        // Don't move the blocks if the game is paused
+        else if (gamePaused)
+            return;
+
+        else
         {
-            case KeyEvent.VK_RIGHT:
-                boolean canMove = true;
-                for (Point p : currentBlock.getPoints(currentBlockRotation))
-                {
-                    // Can't move to the right if it makes it move outside of the board
-                    if (currentBlockOffset.x + p.x >= boardX - 1)
-                        canMove = false;
-
-                    // Ignore the point if it is too high up
-                    else if (currentBlockOffset.y + p.y < 0)
-                        continue;
-                    
-                    // Check if the point at the right isn't empty
-                    else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
-                        canMove = false;
-                }
-                
-                if (canMove)
-                {
-                    currentBlockOffset.translate(1, 0);
-                    repaintBoard();
-                }
-
-                break;
-
-            case KeyEvent.VK_LEFT:
-                canMove = true;
-                for (Point p : currentBlock.getPoints(currentBlockRotation))
-                {
-                    // Can't move to the left if it makes it move out of the board
-                    if (currentBlockOffset.x + p.x <= 0)
-                        canMove = false;
-                    
-                    // Ignore the point if it is too high up
-                    else if (currentBlockOffset.y + p.y < 0)
-                        continue;
-
-                    // Check if the point at the left isn't empty
-                    else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
-                        canMove = false;
-                }
-                
-                if (canMove)
-                {
-                    currentBlockOffset.translate(-1, 0);
-                    repaintBoard();
-                }
+            switch (e.getKeyCode())
+            {
+                case KeyEvent.VK_RIGHT:
+                    moveCurrentBlockRight();
+                    break;
+    
+                case KeyEvent.VK_LEFT:
+                    moveCurrentBlockLeft();
+                    break;
             
-                break;
-        
-            case KeyEvent.VK_DOWN:
-                int blocksFallen = blockIndicatorOffset.y - currentBlockOffset.y;
-                currentBlockOffset.setLocation(blockIndicatorOffset);
-
-                if (blocksFallen >= 5)
-                    gameStats.addScore(blocksFallen * 2);
-
-                repaintBoard(true);
-                break;
-
-            case KeyEvent.VK_UP:
-                // Don't switch if the is no current block
-                if (currentBlock == Blocks.Type.None)
+                case KeyEvent.VK_DOWN:
+                    moveCurrentBlockHardFall();
                     break;
-                
-                // If there is no holded block
-                if (holdBlockShowcase.getBlockAt(0) == Blocks.Type.None)
-                {
-                    holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
-                    generateBlock = true;
-                }
-
-                else
-                {
-                    // Shifts the block to the left if it goes outside of the screen to the right
-                    int newX = Math.min(currentBlockOffset.x, boardX - holdBlockShowcase.getBlockAt(0).getSize(holdBlockShowcase.getRotationAt(0)).width);
-                    
-                    // Test if the holded block's points can fit in the game
-                    boolean canSwitch = true;
-                    for (Point p : holdBlockShowcase.getBlockAt(0).getPoints(holdBlockShowcase.getRotationAt(0)))
-                    {
-                        // Ignore the point if it is too high
-                        if (currentBlockOffset.y + p.y < 0)
-                            continue;
-                        
-                        // Checks if the switched point isn't empty
-                        if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
-                            canSwitch = false;
-                    }
-
-                    // TODO: Smart offset to fit
-
-                    // Switch the blocks if it can
-                    if (canSwitch)
-                    {
-                        Blocks.Type tempBlock = holdBlockShowcase.getBlockAt(0);
-                        int tempRotation = holdBlockShowcase.getRotationAt(0);
-
-                        holdBlockShowcase.removeBlockAt(0);
-                        holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
-                        
-                        currentBlock = tempBlock;
-                        currentBlockRotation = tempRotation;
-                        currentBlockOffset.x = newX;
-                        
-                        repaintBoard(true);
-                    }
-                }
-
-                break;
-        
-            case KeyEvent.VK_SPACE:
-                // Breaks if the rotation makes the block go outside of the board on the Y axis
-                if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation + 90).height > boardY - 1)
+    
+                case KeyEvent.VK_UP:
+                    holdCurrentBlock();
                     break;
-
-                // Shifts the block to the left if it goes outside of the screen to the right
-                int newX = Math.min(currentBlockOffset.x, boardX - currentBlock.getSize(currentBlockRotation + 90).width);
-                    
-                canMove = true;
-                for (Point p : currentBlock.getPoints(currentBlockRotation + 90))
-                {
-                    // Ignore the point if it is too high
-                    if (currentBlockOffset.y + p.y < 0)
-                        continue;
-                    
-                    // Checks if the rotated point isn't empty
-                    if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
-                        canMove = false;
-                }
-                
-                // TODO: Smart offset to fit
-
-                if (canMove)
-                {
-                    currentBlockRotation += 90;
-                    currentBlockOffset.x = newX;
-                    repaintBoard(true);
-                }
-                break;
-
-            default:
-                return;
+            
+                case KeyEvent.VK_SPACE:
+                    rotateCurrentBlock();
+                    break;
+    
+                default:
+                    return;
+            }
         }
 
         e.consume();
@@ -484,9 +557,14 @@ public class Board extends JPanel implements KeyListener {
     public final int boardX = 10;
     public final int boardY = 20;
 
+    private CardLayout layout;
     private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
+    private JPanel pausedPanel;
+    private ScheduledThreadPoolExecutor resumeScheduler;
+
+    private boolean gamePaused = false;
     private boolean gameOver = false;
 
     private boolean generateBlock = true;

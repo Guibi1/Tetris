@@ -16,7 +16,7 @@ import java.awt.BasicStroke;
 
 
 public class BlockShowcase extends JPanel {
-    BlockShowcase(GameWindow gw, String title, int maxBlockCount, boolean generateBlocks)
+    BlockShowcase(Game gw, String title, int maxBlockCount, boolean generateBlocks)
     {        
         showcasedBlocks = new Vector<Block>();
         
@@ -116,7 +116,7 @@ public class BlockShowcase extends JPanel {
 
     private class DrawPanel extends JPanel
     {
-        DrawPanel(GameWindow gw)
+        DrawPanel(Game gw)
         {
             this.gw = gw;
             setBackground(Color.decode("#121417"));
@@ -216,6 +216,6 @@ public class BlockShowcase extends JPanel {
             }
         }
 
-        private final GameWindow gw;
+        private final Game gw;
     }
 }

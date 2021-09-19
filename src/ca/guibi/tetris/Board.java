@@ -20,8 +20,9 @@ import java.awt.geom.Rectangle2D;
 
 
 public class Board extends JPanel implements KeyListener {
-    Board(BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
+    Board(Window window, BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
     {
+        this.window = window;
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
@@ -42,7 +43,7 @@ public class Board extends JPanel implements KeyListener {
         setMinimumSize(new Dimension(boardX * 40, boardY * 40));
     }
 
-    void NewGame()
+    void newGame()
     {
         // Reset the gameBoard
         for (Blocks.Color[] a : gameBoard)
@@ -174,6 +175,9 @@ public class Board extends JPanel implements KeyListener {
 
             System.out.println("Game over.");
             gameStats.saveBestScore();
+            window.showMenu();
+
+            // TODO: show an end screen
         }).start();
     }
 
@@ -474,6 +478,8 @@ public class Board extends JPanel implements KeyListener {
         }
     }
 
+
+    private Window window;
 
     public final int boardX = 10;
     public final int boardY = 20;

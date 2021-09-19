@@ -2,15 +2,12 @@ package ca.guibi.tetris;
 
 
 public class Main {
-
-    public static void main(String[] args) {
-        // TODO: Add menus
-
+    public static void main(String[] args)
+    {
         if (!FontManager.loadFont("resources/Merubot-regular.ttf", 32.0f))
             return;
 
-        GameWindow gw = new GameWindow();
-        gw.setVisible(true);
-        gw.game.NewGame();
+        Window w = new Window();
+        w.setVisible(true);
     }
 }

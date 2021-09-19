@@ -1,24 +1,19 @@
 package ca.guibi.tetris;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-
 import javax.swing.GroupLayout;
 
-import java.awt.Toolkit;
-import java.awt.Dimension;
 
-
-public class GameWindow extends JFrame {
-    GameWindow()
+public class Game extends JPanel {
+    Game(Window window)
     {
         nextBlockPanel = new BlockShowcase(this, "Next blocks", 3, true);
         holdBlockPanel = new BlockShowcase(this, "Hold", 1, false);
         statsPanel = new GameStats();
-        game = new Board(nextBlockPanel, holdBlockPanel, statsPanel);
+        game = new Board(window, nextBlockPanel, holdBlockPanel, statsPanel);
         addKeyListener(game);
         
-        GroupLayout layout = new GroupLayout(getContentPane());
+        GroupLayout layout = new GroupLayout(this);
         setLayout(layout);
 
         layout.setAutoCreateGaps(true);
@@ -35,7 +30,7 @@ public class GameWindow extends JFrame {
         );
         
         layout.setVerticalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(holdBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
                     .addComponent(statsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
@@ -43,20 +38,11 @@ public class GameWindow extends JFrame {
                 .addComponent(game, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
                 .addComponent(nextBlockPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
         );
+    }
 
-        // Window parameters
-        setMinimumSize(new Dimension(
-            game.getMinimumSize().width + holdBlockPanel.getMinimumSize().width + nextBlockPanel.getMinimumSize().width,
-            Math.max(game.getMinimumSize().height, Math.max(holdBlockPanel.getMinimumSize().height, nextBlockPanel.getMinimumSize().height))
-        ));
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setTitle("Tetris");
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation((screenSize.width - getSize().width) / 2, (screenSize.height - getSize().height) / 2);
-
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        validate();
+    public void newGame()
+    {
+        game.newGame();
     }
 
     public int getBlockSizePixel()
@@ -67,10 +53,9 @@ public class GameWindow extends JFrame {
         return 30;
     }
 
-    Board game;
-    BlockShowcase nextBlockPanel;
-    BlockShowcase holdBlockPanel;
-    GameStats statsPanel;
 
-    JPanel layoutLeft;
+    private Board game;
+    private BlockShowcase nextBlockPanel;
+    private BlockShowcase holdBlockPanel;
+    private GameStats statsPanel;
 }

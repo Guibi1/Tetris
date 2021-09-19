@@ -62,6 +62,7 @@ public class Board extends JPanel implements KeyListener {
         gameStats.setLinesCleared(0);
         generateBlock = true;
         currentBlock = Blocks.Type.None;
+        isFirstBlock = true;
 
         Run();
         RunBlockIndicator();
@@ -148,7 +149,16 @@ public class Board extends JPanel implements KeyListener {
                         currentBlock = nextBlockShowcase.getBlockAt(0);
                         currentBlockRotation = nextBlockShowcase.getRotationAt(0);
                         currentBlockOffset.setLocation((boardX - currentBlock.getSize(currentBlockRotation).width) / 2, 0 - currentBlock.getSize(currentBlockRotation).height);
-                        nextBlockShowcase.removeBlockAt(0);
+                        
+                        if (isFirstBlock)
+                        {
+                            nextBlockShowcase.removeBlockAt(0);
+                            isFirstBlock = false;
+                        }
+
+                        else
+                            nextBlockShowcase.removeFirstBlock();
+                        
                         nextBlockShowcase.addRandomBlock();
                         repaintBoard();
                     }
@@ -568,6 +578,7 @@ public class Board extends JPanel implements KeyListener {
     private boolean gameOver = false;
 
     private boolean generateBlock = true;
+    private boolean isFirstBlock = true;
     private final BlockShowcase nextBlockShowcase;
     private final BlockShowcase holdBlockShowcase;
     private final GameStats gameStats;

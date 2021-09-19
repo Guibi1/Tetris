@@ -16,8 +16,9 @@ import java.awt.BasicStroke;
 
 
 public class BlockShowcase extends JPanel {
-    BlockShowcase(Game gw, String title, int maxBlockCount, boolean generateBlocks)
+    BlockShowcase(Game game, String title, int maxBlockCount, boolean generateBlocks)
     {        
+        this.game = game;
         showcasedBlocks = new Vector<Block>();
         
         // blockCount can't be less than 1
@@ -27,7 +28,7 @@ public class BlockShowcase extends JPanel {
         titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         FontManager.setComponentFont(titleLabel);
 
-        drawPanel = new DrawPanel(gw);
+        drawPanel = new DrawPanel();
         
         // Layout
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -63,13 +64,17 @@ public class BlockShowcase extends JPanel {
         // Repaint the newly added block
         drawPanel.paintBlocks(showcasedBlocks.size() - 1);
     }
+
+    public void removeFirstBlock()
+    {
+        removeBlockAt(0);
+        animateBlocks();
+    }
     
     public void removeBlockAt(int index)
     {
         showcasedBlocks.remove(index);
         drawPanel.paintBlocks(-1);
-
-        // TODO: Make an animation
     }
 
     public Blocks.Type getBlockAt(int index)
@@ -88,17 +93,46 @@ public class BlockShowcase extends JPanel {
         return 0;
     }
 
+    private void animateBlocks()
+    {
+        heightOffset = (int) Math.round(game.getBlockSizePixel() * ratioHeight);
+
+        new Thread(() ->
+        {
+            int animationTime = 250;
+
+            int stepsTiming = animationTime / 20;
+            float steps = heightOffset / stepsTiming;
+
+            while (heightOffset > 0)
+            {
+                heightOffset -= steps;
+                drawPanel.paintBlocks(-1);
+                
+                // Sleep until next height update
+                try {
+                    Thread.sleep(stepsTiming);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
 
     private final double ratioWidth = 5;
     private final double ratioHeight = 5.5;
 
     private final int maxBlockCount;
+    private final Game game;
     
     private JLabel titleLabel;
     private DrawPanel drawPanel;
-
+    
     private Random random = new Random(System.currentTimeMillis());
     private Vector<Block> showcasedBlocks;
+
+    private int heightOffset = 0;
 
 
     private class Block
@@ -116,28 +150,27 @@ public class BlockShowcase extends JPanel {
 
     private class DrawPanel extends JPanel
     {
-        DrawPanel(Game gw)
+        DrawPanel()
         {
-            this.gw = gw;
             setBackground(Color.decode("#121417"));
         }
 
         @Override
         public Dimension getPreferredSize()
         {
-            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
+            return new Dimension((int) Math.round(game.getBlockSizePixel() * ratioWidth), (int) Math.round(game.getBlockSizePixel() * ratioHeight * maxBlockCount));
         }
 
         @Override
         public Dimension getMaximumSize()
         {
-            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
+            return new Dimension((int) Math.round(game.getBlockSizePixel() * ratioWidth), (int) Math.round(game.getBlockSizePixel() * ratioHeight * maxBlockCount));
         }
 
         @Override
         public Dimension getMinimumSize()
         {
-            return new Dimension((int) Math.round(gw.getBlockSizePixel() * ratioWidth), (int) Math.round(gw.getBlockSizePixel() * ratioHeight * maxBlockCount));
+            return new Dimension((int) Math.round(game.getBlockSizePixel() * ratioWidth), (int) Math.round(game.getBlockSizePixel() * ratioHeight * maxBlockCount));
         }
 
         public void paintBlocks(int index)
@@ -151,10 +184,10 @@ public class BlockShowcase extends JPanel {
             // Repaint only the block at the specified index
             else
             {
-                int width = (int) Math.round(gw.getBlockSizePixel() * ratioWidth);
-                int height = (int) Math.round(gw.getBlockSizePixel() * ratioHeight);
+                int width = (int) Math.round(game.getBlockSizePixel() * ratioWidth);
+                int height = (int) Math.round(game.getBlockSizePixel() * ratioHeight);
                 
-                java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(height * index, 0, width, height * (index + 1))));
+                java.awt.EventQueue.invokeLater(new Thread(() -> paintImmediately(height * index + heightOffset, 0, width, height * (index + 1) + heightOffset)));
             }
         }
 
@@ -164,7 +197,7 @@ public class BlockShowcase extends JPanel {
             super.paintComponent(g);
             Graphics2D g2D = (Graphics2D) g;
 
-            int blockSizePixel = gw.getBlockSizePixel();
+            int blockSizePixel = game.getBlockSizePixel();
 
             for (int i = 0; i < showcasedBlocks.size(); i++)
             {
@@ -173,7 +206,7 @@ public class BlockShowcase extends JPanel {
                 // Center the block
                 Point offset = new Point(
                     (int) Math.round((ratioWidth - block.getSize(rotation).width) * blockSizePixel / 2),
-                    (int) Math.round((ratioHeight - block.getSize(rotation).height) * blockSizePixel / 2 + (blockSizePixel * ratioHeight * i)));
+                    (int) Math.round((ratioHeight - block.getSize(rotation).height) * blockSizePixel / 2 + (blockSizePixel * ratioHeight * i) + heightOffset));
 
                 for (Point p : block.getPoints(rotation))
                 {
@@ -215,7 +248,5 @@ public class BlockShowcase extends JPanel {
                 }
             }
         }
-
-        private final Game gw;
     }
 }

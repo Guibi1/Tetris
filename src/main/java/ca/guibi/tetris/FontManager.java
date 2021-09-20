@@ -1,4 +1,4 @@
-package main.java.Tetris;
+package ca.guibi.tetris;
 
 import java.io.IOException;
 import java.util.Collections;

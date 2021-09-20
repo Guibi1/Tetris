@@ -1,4 +1,4 @@
-package main.java.Tetris;
+package ca.guibi.tetris;
 
 
 public class App {

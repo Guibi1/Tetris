@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+            "label": "Build",
+            "type": "shell",
+            "command": "gradlew.bat build",
+            "problemMatcher": [],
+            "presentation": {
+                "close": true,
+                "clear": true
+            }
+        },
+		{
+            "label": "Run",
+            "type": "shell",
+            "command": "java -jar ${workspaceFolder}\\build\\libs\\Tetris.jar",
+            "problemMatcher": [],
+            "presentation": {
+                "close": true,
+                "clear": true
+            },
+			"group": {
+                "kind": "build",
+                "isDefault": true
+            },
+			"dependsOn": ["Build"],
+        }
+	]
+}

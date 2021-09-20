@@ -1,4 +1,4 @@
-package test.java.Tetris;
+package Tetris;
 
 
 class AppTest {

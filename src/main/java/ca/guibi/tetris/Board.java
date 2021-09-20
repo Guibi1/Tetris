@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JFrame;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
@@ -36,7 +37,7 @@ public class Board extends JPanel implements KeyListener {
 
         // Layout
         layout = new CardLayout();
-        layout.setVgap(1);
+        layout.setVgap(0);
         setLayout(layout);
         
         drawPanel = new DrawPanel();
@@ -47,8 +48,6 @@ public class Board extends JPanel implements KeyListener {
         FontManager.setComponentFont(labelPause, 50f);
         pausedPanel.add(labelPause);
         add(pausedPanel, "pause");
-
-        setMinimumSize(new Dimension(boardX * 40, boardY * 40));
     }
 
     public void newGame()
@@ -604,13 +603,10 @@ public class Board extends JPanel implements KeyListener {
         {
             double aspectRatio = 1.0 / 2.0;
 
-            Dimension d = getParent().getSize();
-            int newHeight = (int) Math.round(Math.min(
-                d.height - 30,
-                d.width / aspectRatio - 30
-            ));
+            Dimension d = ((JFrame) getTopLevelAncestor()).getContentPane().getSize();
+            d.height -= 40;
 
-            return new Dimension((int) Math.round(newHeight * aspectRatio), newHeight);
+            return new Dimension((int) Math.round(d.height * aspectRatio), d.height);
         }
 
         @Override

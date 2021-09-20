@@ -15,6 +15,7 @@ public class Window extends JFrame {
 
         // Layout
         layout = new CardLayout();
+        layout.setVgap(0);
         setLayout(layout);
 
         add(menu, "menu");

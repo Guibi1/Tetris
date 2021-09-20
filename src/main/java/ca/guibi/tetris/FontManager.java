@@ -16,7 +16,7 @@ public abstract class FontManager {
     {
         try
         {
-            font = Font.createFont(Font.TRUETYPE_FONT, Main.class.getResourceAsStream(fontFile));
+            font = Font.createFont(Font.TRUETYPE_FONT, App.class.getResourceAsStream(fontFile));
             font = font.deriveFont(
                 Collections.singletonMap(
                     TextAttribute.WEIGHT, TextAttribute.WEIGHT_HEAVY

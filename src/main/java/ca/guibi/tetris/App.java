@@ -1,7 +1,7 @@
 package ca.guibi.tetris;
 
 
-public class Main {
+public class App {
     public static void main(String[] args)
     {
         if (!FontManager.loadFont("resources/Merubot-regular.ttf", 32.0f))

@@ -40,6 +40,7 @@ public class GameStats extends JPanel {
 
         } catch (IOException e) {
             System.out.println("Can't read best score.");
+            e.printStackTrace();
         }
     }
 
@@ -58,6 +59,7 @@ public class GameStats extends JPanel {
                 
             } catch (IOException e) {
                 System.out.println("Can't save best score.");
+                e.printStackTrace();
             }
         }
     }

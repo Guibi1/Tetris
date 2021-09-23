@@ -25,7 +25,8 @@ public abstract class FontManager {
 
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);
         } catch (IOException|FontFormatException e) {
-            System.out.println("Error while loading the font: " + e.getMessage());
+            System.out.println("Error while loading the font.");
+            e.printStackTrace();
             return false;
         }
 

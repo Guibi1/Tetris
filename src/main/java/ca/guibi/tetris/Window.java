@@ -1,16 +1,19 @@
 package ca.guibi.tetris;
 
+import java.util.HashSet;
+
 import javax.swing.JFrame;
 
-import java.awt.Toolkit;
-import java.awt.Dimension;
 import java.awt.CardLayout;
+import java.awt.AWTKeyStroke;
+import java.awt.KeyboardFocusManager;
 
 
 public class Window extends JFrame {
     Window()
     {
         menu = new Menu(this);
+        settings = new Settings(this);
         game = new Game(this);
 
         // Layout
@@ -19,18 +22,22 @@ public class Window extends JFrame {
         setLayout(layout);
 
         add(menu, "menu");
+        add(settings, "settings");
         add(game, "game");
         
         // Window parameters
-        setMinimumSize(new Dimension(600, 800));
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setTitle("Tetris");
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setLocation((screenSize.width - getSize().width) / 2, (screenSize.height - getSize().height) / 2);
-
+        setResizable(false);
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
         validate();
+
+        // Disable "tab" key to change the focus
+        for (int id : new int[] {KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, KeyboardFocusManager.UP_CYCLE_TRAVERSAL_KEYS, KeyboardFocusManager.DOWN_CYCLE_TRAVERSAL_KEYS})
+            setFocusTraversalKeys(id, new HashSet<AWTKeyStroke>());
     }
 
     public void showMenu()
@@ -48,6 +55,7 @@ public class Window extends JFrame {
     public void showSettings()
     {
         layout.show(getContentPane(), "settings");
+        settings.requestFocusInWindow();
     }
 
     public void newGame()
@@ -55,8 +63,14 @@ public class Window extends JFrame {
         game.newGame();
     }
 
+    public Settings getSettings()
+    {
+        return settings;
+    }
+
 
     private Menu menu;
+    private Settings settings;
     private Game game;
 
     private CardLayout layout;

@@ -18,7 +18,7 @@ public class Game extends JPanel {
         gameStats = new GameStats();
         board = new Board(window, nextBlockShowcase, holdBlockShowcase, gameStats);
         addKeyListener(board);
-
+        requestFocusInWindow();
         
         pauseButton = new JButton("Pause");
         FontManager.setComponentFont(pauseButton);
@@ -28,6 +28,7 @@ public class Game extends JPanel {
             public void actionPerformed(ActionEvent e)
             {
                 board.togglePause();
+                requestFocusInWindow();
             }
         });
 
@@ -38,29 +39,34 @@ public class Game extends JPanel {
         setLayout(new GridBagLayout());
         add(centeredPanel);
 
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
-
         layout.setHorizontalGroup(
             layout.createSequentialGroup()
+                .addGap(20)
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
+                .addGap(20)
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGap(25)
                 .addComponent(nextBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGap(20)
         );
         
         layout.setVerticalGroup(
             layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addGap(20)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
+                .addGap(20)
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGap(25)
                 .addComponent(nextBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGap(20)
         );
     }
 

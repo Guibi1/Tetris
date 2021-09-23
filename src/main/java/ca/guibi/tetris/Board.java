@@ -8,11 +8,11 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JFrame;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.Graphics;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -29,6 +29,7 @@ public class Board extends JPanel implements KeyListener {
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
+        settings = window.getSettings();
         resumeScheduler = new ScheduledThreadPoolExecutor(1);
 
         // Fill the gameBoard
@@ -212,7 +213,6 @@ public class Board extends JPanel implements KeyListener {
 
             if (gameOver)
             {
-                System.out.println("Game over.");
                 gameStats.saveBestScore();
                 window.showMenu();
 
@@ -430,7 +430,7 @@ public class Board extends JPanel implements KeyListener {
             return;
 
         // Key to toggle pause
-        else if (e.getKeyCode() == KeyEvent.VK_P)
+        else if (e.getKeyCode() == settings.keyPause.getValue() || e.getKeyCode() == KeyEvent.VK_ESCAPE)
             togglePause();
 
         // Don't move the blocks if the game is paused
@@ -439,31 +439,20 @@ public class Board extends JPanel implements KeyListener {
 
         else
         {
-            switch (e.getKeyCode())
-            {
-                case KeyEvent.VK_RIGHT:
-                    moveCurrentBlockRight();
-                    break;
-    
-                case KeyEvent.VK_LEFT:
-                    moveCurrentBlockLeft();
-                    break;
-            
-                case KeyEvent.VK_DOWN:
-                    moveCurrentBlockHardFall();
-                    break;
-    
-                case KeyEvent.VK_UP:
-                    holdCurrentBlock();
-                    break;
-            
-                case KeyEvent.VK_SPACE:
-                    rotateCurrentBlock();
-                    break;
-    
-                default:
-                    return;
-            }
+            if (e.getKeyCode() == settings.keyRight.getValue())
+                moveCurrentBlockRight();
+
+            else if (e.getKeyCode() == settings.keyLeft.getValue())
+                moveCurrentBlockLeft();
+
+            else if (e.getKeyCode() == settings.keyHardFall.getValue())
+                moveCurrentBlockHardFall();
+
+            else if (e.getKeyCode() == settings.keyHold.getValue())
+                holdCurrentBlock();
+
+            else if (e.getKeyCode() == settings.keyRotate.getValue())
+                rotateCurrentBlock();
         }
 
         e.consume();
@@ -474,6 +463,17 @@ public class Board extends JPanel implements KeyListener {
     
     @Override
     public void keyTyped(KeyEvent e) { return; }
+    
+    @Override
+    public Dimension getPreferredSize()
+    {
+        double aspectRatio = 1.0 / 2.0;
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        screenSize.height -= 20;
+
+        return new Dimension((int) Math.round(screenSize.height * aspectRatio), screenSize.height);
+    }
 
     private void repaintBoard()
     {
@@ -562,6 +562,7 @@ public class Board extends JPanel implements KeyListener {
 
 
     private Window window;
+    private Settings settings;
 
     public final int boardX = 10;
     public final int boardY = 20;
@@ -596,17 +597,6 @@ public class Board extends JPanel implements KeyListener {
         {
             setBorder(new LineBorder(Color.decode("#373D43"), strokeSize));
             setBackground(Color.decode("#121417"));
-        }
-
-        @Override
-        public Dimension getPreferredSize()
-        {
-            double aspectRatio = 1.0 / 2.0;
-
-            Dimension d = ((JFrame) getTopLevelAncestor()).getContentPane().getSize();
-            d.height -= 40;
-
-            return new Dimension((int) Math.round(d.height * aspectRatio), d.height);
         }
 
         @Override

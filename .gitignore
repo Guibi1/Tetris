@@ -1,4 +1,6 @@
 bestScore.dat
+config.properties
+
 .gradle
 build
 bin

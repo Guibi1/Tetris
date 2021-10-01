@@ -1,8 +1,6 @@
 package ca.guibi.tetris;
 
-import javax.swing.JPanel;
 import javax.swing.JLabel;
-import javax.swing.JButton;
 import javax.swing.GroupLayout;
 
 import java.awt.Dimension;
@@ -11,13 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class Menu extends JPanel {
+public class Menu extends StyledPanel {
     Menu(Window window)
     {
         titleLabel = new JLabel("Tetris");
         FontManager.setComponentFont(titleLabel, 160f);
 
-        startButton = new JButton("New game");
+        startButton = new StyledButton("New game");
         FontManager.setComponentFont(startButton);
         startButton.setPreferredSize(new Dimension(200, 0));
         startButton.addActionListener(new ActionListener() {
@@ -29,7 +27,7 @@ public class Menu extends JPanel {
             }
         });
         
-        settingsButton = new JButton("Settings");
+        settingsButton = new StyledButton("Settings");
         FontManager.setComponentFont(settingsButton);
         settingsButton.setPreferredSize(new Dimension(200, 0));
         settingsButton.addActionListener(new ActionListener() {
@@ -40,7 +38,7 @@ public class Menu extends JPanel {
             }
         });
 
-        quitButton = new JButton("Quit");
+        quitButton = new StyledButton("Quit");
         FontManager.setComponentFont(quitButton);
         quitButton.setPreferredSize(new Dimension(200, 0));
         quitButton.addActionListener(new ActionListener() {
@@ -52,7 +50,7 @@ public class Menu extends JPanel {
         });
 
         // Layout
-        JPanel centeredPanel = new JPanel();
+        StyledPanel centeredPanel = new StyledPanel();
         GroupLayout layout = new GroupLayout(centeredPanel);
         centeredPanel.setLayout(layout);
         setLayout(new GridBagLayout());
@@ -82,7 +80,7 @@ public class Menu extends JPanel {
 
 
     private JLabel titleLabel;
-    private JButton startButton;
-    private JButton settingsButton;
-    private JButton quitButton;
+    private StyledButton startButton;
+    private StyledButton settingsButton;
+    private StyledButton quitButton;
 }

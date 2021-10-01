@@ -1,6 +1,5 @@
 package ca.guibi.tetris;
 
-import javax.swing.JPanel;
 import javax.swing.OverlayLayout;
 
 import java.awt.Color;
@@ -10,7 +9,7 @@ import java.awt.event.MouseListener;
 import java.awt.Component;
 
 
-public class DialogLayout extends JPanel {
+public class DialogLayout extends StyledPanel {
     DialogLayout(Component mainContent, Component dialog)
     {
         layout = new OverlayLayout(this);
@@ -84,7 +83,7 @@ public class DialogLayout extends JPanel {
     private OverlayLayout layout;
 
     private Component mainContent;
-    private JPanel noMousePanel = new JPanel();
-    private JPanel blurPanel = new JPanel();
+    private StyledPanel noMousePanel = new StyledPanel();
+    private StyledPanel blurPanel = new StyledPanel();
     private Component dialog;
 }

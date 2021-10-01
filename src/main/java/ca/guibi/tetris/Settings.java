@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JButton;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 
@@ -23,7 +21,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.ActionListener;
 
 
-public class Settings extends JPanel {
+public class Settings extends StyledPanel {
     Settings(Window window)
     {
         try {
@@ -52,7 +50,7 @@ public class Settings extends JPanel {
         titleLabel = new JLabel("Settings");
         FontManager.setComponentFont(titleLabel, 80f);
 
-        cancelButton = new JButton("Cancel");
+        cancelButton = new StyledButton("Cancel");
         FontManager.setComponentFont(cancelButton);
         cancelButton.setPreferredSize(new Dimension(200, 0));
         cancelButton.addActionListener(new ActionListener() {
@@ -64,7 +62,7 @@ public class Settings extends JPanel {
             }
         });
 
-        saveButton = new JButton("Save");
+        saveButton = new StyledButton("Save");
         FontManager.setComponentFont(saveButton);
         saveButton.setPreferredSize(new Dimension(200, 0));
         saveButton.addActionListener(new ActionListener() {
@@ -78,8 +76,8 @@ public class Settings extends JPanel {
 
         // Layout
         modifyShortcutPanel = new ModifyShortcutDialog();
-
-        JPanel mainContentPanel = new JPanel();
+        
+        StyledPanel mainContentPanel = new StyledPanel();
         GroupLayout mainContentLayout = new GroupLayout(mainContentPanel);
         mainContentPanel.setLayout(mainContentLayout);
 
@@ -162,8 +160,8 @@ public class Settings extends JPanel {
     private ArrayList<SettingsLine> elements = new ArrayList<SettingsLine>();
     
     private JLabel titleLabel;
-    private JButton saveButton;
-    private JButton cancelButton;
+    private StyledButton saveButton;
+    private StyledButton cancelButton;
 
     private DialogLayout layout;
     private ModifyShortcutDialog modifyShortcutPanel;
@@ -177,7 +175,7 @@ public class Settings extends JPanel {
     public SettingsLine keySoftFall = new SettingsLine("Soft Fall", KeyEvent.VK_DOWN);
 
 
-    private class ModifyShortcutDialog extends JPanel implements KeyListener {
+    private class ModifyShortcutDialog extends StyledPanel implements KeyListener {
         ModifyShortcutDialog()
         {
             addKeyListener(this);
@@ -185,7 +183,7 @@ public class Settings extends JPanel {
             setOpaque(false);
             setLayout(new GridBagLayout());
 
-            JPanel mainPanel = new JPanel();
+            StyledPanel mainPanel = new StyledPanel();
             mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
             add(mainPanel);
 
@@ -194,9 +192,9 @@ public class Settings extends JPanel {
             FontManager.setComponentFont(textLabel);
             mainPanel.add(textLabel);
 
-            cancelButton = new JButton("Cancel");
+            cancelButton = new StyledButton("Cancel");
             FontManager.setComponentFont(cancelButton);
-            cancelButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
+            cancelButton.setAlignmentX(StyledButton.CENTER_ALIGNMENT);
             cancelButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -240,11 +238,11 @@ public class Settings extends JPanel {
         private SettingsLine currentShortcut = null;
 
         private JLabel textLabel;
-        private JButton cancelButton;
+        private StyledButton cancelButton;
     }
 
 
-    public class SettingsLine extends JPanel {
+    public class SettingsLine extends StyledPanel {
         SettingsLine(String name, int defaultValue)
         {
             this.defaultValue = defaultValue;
@@ -254,7 +252,7 @@ public class Settings extends JPanel {
             nameLabel = new JLabel(name);
             FontManager.setComponentFont(nameLabel);
 
-            modifyButton = new JButton("Shortcut here");
+            modifyButton = new StyledButton("Shortcut here");
             FontManager.setComponentFont(modifyButton);
             modifyButton.addActionListener(new ActionListener() {
                 @Override
@@ -264,7 +262,7 @@ public class Settings extends JPanel {
                 }
             });
 
-            resetButton = new JButton("Reset");
+            resetButton = new StyledButton("Reset");
             FontManager.setComponentFont(resetButton);
             resetButton.addActionListener(new ActionListener() {
                 @Override
@@ -327,7 +325,7 @@ public class Settings extends JPanel {
         private int value;
 
         private JLabel nameLabel;
-        private JButton modifyButton;
-        private JButton resetButton;
+        private StyledButton modifyButton;
+        private StyledButton resetButton;
     }
 }

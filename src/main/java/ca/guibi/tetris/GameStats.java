@@ -6,11 +6,10 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.BoxLayout;
 
 
-public class GameStats extends JPanel {
+public class GameStats extends StyledPanel {
     GameStats()
     {
         // Layout

@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
@@ -22,7 +21,7 @@ import java.awt.AlphaComposite;
 import java.awt.geom.Rectangle2D;
 
 
-public class Board extends JPanel implements KeyListener {
+public class Board extends StyledPanel implements KeyListener {
     Board(Window window, BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
     {
         this.window = window;
@@ -44,7 +43,7 @@ public class Board extends JPanel implements KeyListener {
         drawPanel = new DrawPanel();
         add(drawPanel, "game");
 
-        pausedPanel = new JPanel();
+        pausedPanel = new StyledPanel();
         JLabel labelPause = new JLabel("Game paused");
         FontManager.setComponentFont(labelPause, 50f);
         pausedPanel.add(labelPause);
@@ -571,7 +570,7 @@ public class Board extends JPanel implements KeyListener {
     private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
 
-    private JPanel pausedPanel;
+    private StyledPanel pausedPanel;
     private ScheduledThreadPoolExecutor resumeScheduler;
 
     private boolean gamePaused = false;
@@ -591,7 +590,7 @@ public class Board extends JPanel implements KeyListener {
     private float alphaBlockIndicator = 0f;
 
 
-    private class DrawPanel extends JPanel
+    private class DrawPanel extends StyledPanel
     {
         DrawPanel()
         {

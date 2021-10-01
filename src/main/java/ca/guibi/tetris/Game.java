@@ -1,7 +1,5 @@
 package ca.guibi.tetris;
 
-import javax.swing.JPanel;
-import javax.swing.JButton;
 import javax.swing.GroupLayout;
 
 import java.awt.Dimension;
@@ -10,7 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class Game extends JPanel {
+public class Game extends StyledPanel {
     Game(Window window)
     {
         nextBlockShowcase = new BlockShowcase(this, "Next blocks", 3, true);
@@ -20,7 +18,7 @@ public class Game extends JPanel {
         addKeyListener(board);
         requestFocusInWindow();
         
-        pauseButton = new JButton("Pause");
+        pauseButton = new StyledButton("Pause");
         FontManager.setComponentFont(pauseButton);
         pauseButton.setPreferredSize(new Dimension(200, 0));
         pauseButton.addActionListener(new ActionListener() {
@@ -33,7 +31,7 @@ public class Game extends JPanel {
         });
 
         // Layout
-        JPanel centeredPanel = new JPanel();
+        StyledPanel centeredPanel = new StyledPanel();
         GroupLayout layout = new GroupLayout(centeredPanel);
         centeredPanel.setLayout(layout);
         setLayout(new GridBagLayout());
@@ -84,7 +82,7 @@ public class Game extends JPanel {
     }
 
 
-    private JButton pauseButton;
+    private StyledButton pauseButton;
 
     private Board board;
     private BlockShowcase nextBlockShowcase;

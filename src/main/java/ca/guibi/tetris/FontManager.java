@@ -6,6 +6,7 @@ import java.util.Collections;
 import javax.swing.JComponent;
 
 import java.awt.Font;
+import java.awt.Color;
 import java.awt.font.TextAttribute;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
@@ -36,13 +37,16 @@ public abstract class FontManager {
     public static void setComponentFont(JComponent component)
     {
         component.setFont(font);
+        component.setForeground(textColor);
     }
 
     public static void setComponentFont(JComponent component, Float fontSize)
     {
         component.setFont(font.deriveFont(fontSize));
+        component.setForeground(textColor);
     }
 
 
     private static Font font;
+    private static final Color textColor = Color.decode("#F1F1E6");
 }

@@ -3,7 +3,6 @@ package ca.guibi.tetris;
 import java.util.Random;
 import java.util.Vector;
 
-import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 
@@ -15,7 +14,7 @@ import java.awt.Graphics2D;
 import java.awt.BasicStroke;
 
 
-public class BlockShowcase extends JPanel {
+public class BlockShowcase extends StyledPanel {
     BlockShowcase(Game game, String title, int maxBlockCount, boolean generateBlocks)
     {        
         this.game = game;
@@ -148,7 +147,7 @@ public class BlockShowcase extends JPanel {
     }
 
 
-    private class DrawPanel extends JPanel
+    private class DrawPanel extends StyledPanel
     {
         DrawPanel()
         {

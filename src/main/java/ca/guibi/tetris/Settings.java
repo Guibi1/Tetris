@@ -43,8 +43,7 @@ public class Settings extends StyledPanel {
         elements.add(keyRight);
         elements.add(keyRotate);
         elements.add(keyHold);
-        elements.add(keyHardFall);
-        elements.add(keySoftFall);
+        elements.add(keyFall);
 
         // GUI
         titleLabel = new JLabel("Settings");
@@ -93,8 +92,7 @@ public class Settings extends StyledPanel {
                 .addComponent(keyRight)
                 .addComponent(keyRotate)
                 .addComponent(keyHold)
-                .addComponent(keyHardFall)
-                .addComponent(keySoftFall)
+                .addComponent(keyFall)
                 .addGap(20)
                 .addGroup(mainContentLayout.createSequentialGroup()
                     .addComponent(cancelButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -111,8 +109,7 @@ public class Settings extends StyledPanel {
                 .addComponent(keyRight)
                 .addComponent(keyRotate)
                 .addComponent(keyHold)
-                .addComponent(keyHardFall)
-                .addComponent(keySoftFall)
+                .addComponent(keyFall)
                 .addGap(20)
                 .addGroup(mainContentLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(cancelButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -171,8 +168,7 @@ public class Settings extends StyledPanel {
     public SettingsLine keyRight = new SettingsLine("Right", KeyEvent.VK_RIGHT);
     public SettingsLine keyRotate = new SettingsLine("Rotate", KeyEvent.VK_SPACE);
     public SettingsLine keyHold = new SettingsLine("Hold", KeyEvent.VK_UP);
-    public SettingsLine keyHardFall = new SettingsLine("Hard Fall", KeyEvent.VK_SHIFT);
-    public SettingsLine keySoftFall = new SettingsLine("Soft Fall", KeyEvent.VK_DOWN);
+    public SettingsLine keyFall = new SettingsLine("Fall", KeyEvent.VK_DOWN);
 
 
     private class ModifyShortcutDialog extends StyledPanel implements KeyListener {

@@ -43,13 +43,11 @@ public class Window extends JFrame {
     public void showMenu()
     {
         layout.show(getContentPane(), "menu");
-        menu.requestFocusInWindow();
     }
 
     public void showGame()
     {
         layout.show(getContentPane(), "game");
-        game.requestFocusInWindow();
     }
 
     public void showSettings()

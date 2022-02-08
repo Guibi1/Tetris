@@ -1,12 +1,16 @@
 package ca.guibi.tetris;
 
 import java.util.Arrays;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JLabel;
+import javax.swing.KeyStroke;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
@@ -21,7 +25,7 @@ import java.awt.AlphaComposite;
 import java.awt.geom.Rectangle2D;
 
 
-public class Board extends StyledPanel implements KeyListener {
+public class Board extends StyledPanel {
     Board(Window window, BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
     {
         this.window = window;
@@ -48,10 +52,54 @@ public class Board extends StyledPanel implements KeyListener {
         FontManager.setComponentFont(labelPause, 50f);
         pausedPanel.add(labelPause);
         add(pausedPanel, "pause");
+        
+        // Set actions
+        ActionMap actionMap = getActionMap();
+        actionMap.put("pause", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                togglePause();
+            }
+        });
+        actionMap.put("moveRight", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                moveCurrentBlockRight();
+            }
+        });
+        actionMap.put("moveLeft", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                moveCurrentBlockLeft();
+            }
+        });
+        actionMap.put("fall", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                fallCurrentBlock();
+            }
+        });
+        actionMap.put("hold", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                holdCurrentBlock();
+            }
+        });
+        actionMap.put("rotate", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                rotateCurrentBlock();
+            }
+        });
     }
 
     public void newGame()
     {
+        // Set keybinds
+        InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+        inputMap.clear();
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "pause");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyPause.getValue(), 0), "pause");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyRight.getValue(), 0), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyLeft.getValue(), 0), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyFall.getValue(), 0), "fall");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyHold.getValue(), 0), "hold");
+        inputMap.put(KeyStroke.getKeyStroke(settings.keyRotate.getValue(), 0), "rotate");
+
         // Reset the gameBoard
         for (Blocks.Color[] a : gameBoard)
             Arrays.fill(a, Blocks.Color.None);
@@ -280,6 +328,10 @@ public class Board extends StyledPanel implements KeyListener {
 
     private void moveCurrentBlockRight()
     {
+        // Do nothing if the game is over or paused
+        if (gameOver || gamePaused)
+            return;
+
         boolean canMove = true;
         for (Point p : currentBlock.getPoints(currentBlockRotation))
         {
@@ -305,6 +357,10 @@ public class Board extends StyledPanel implements KeyListener {
 
     private void moveCurrentBlockLeft()
     {
+        // Do nothing if the game is over or paused
+        if (gameOver || gamePaused)
+            return;
+            
         boolean canMove = true;
         for (Point p : currentBlock.getPoints(currentBlockRotation))
         {
@@ -328,8 +384,12 @@ public class Board extends StyledPanel implements KeyListener {
         }
     }
 
-    private void moveCurrentBlockHardFall()
+    private void fallCurrentBlock()
     {
+        // Do nothing if the game is over or paused
+        if (gameOver || gamePaused)
+            return;
+            
         int blocksFallen = blockIndicatorOffset.y - currentBlockOffset.y;
         currentBlockOffset.setLocation(blockIndicatorOffset);
 
@@ -341,6 +401,10 @@ public class Board extends StyledPanel implements KeyListener {
 
     private void rotateCurrentBlock()
     {
+        // Do nothing if the game is over or paused
+        if (gameOver || gamePaused)
+            return;
+            
         // Breaks if the rotation makes the block go outside of the board on the Y axis
         if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation + 90).height > boardY - 1)
             return;
@@ -372,6 +436,10 @@ public class Board extends StyledPanel implements KeyListener {
 
     private void holdCurrentBlock()
     {
+        // Do nothing if the game is over or paused
+        if (gameOver || gamePaused)
+            return;
+        
         // Don't switch if there is no current block
         if (currentBlock == Blocks.Type.None)
             return;
@@ -420,49 +488,7 @@ public class Board extends StyledPanel implements KeyListener {
             }
         }
     }
-    
-    @Override
-    public void keyPressed(KeyEvent e)
-    {
-        // Do nothing if the game is over
-        if (gameOver)
-            return;
 
-        // Key to toggle pause
-        else if (e.getKeyCode() == settings.keyPause.getValue() || e.getKeyCode() == KeyEvent.VK_ESCAPE)
-            togglePause();
-
-        // Don't move the blocks if the game is paused
-        else if (gamePaused)
-            return;
-
-        else
-        {
-            if (e.getKeyCode() == settings.keyRight.getValue())
-                moveCurrentBlockRight();
-
-            else if (e.getKeyCode() == settings.keyLeft.getValue())
-                moveCurrentBlockLeft();
-
-            else if (e.getKeyCode() == settings.keyHardFall.getValue())
-                moveCurrentBlockHardFall();
-
-            else if (e.getKeyCode() == settings.keyHold.getValue())
-                holdCurrentBlock();
-
-            else if (e.getKeyCode() == settings.keyRotate.getValue())
-                rotateCurrentBlock();
-        }
-
-        e.consume();
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) { return; }
-    
-    @Override
-    public void keyTyped(KeyEvent e) { return; }
-    
     @Override
     public Dimension getPreferredSize()
     {

@@ -15,9 +15,7 @@ public class Game extends StyledPanel {
         holdBlockShowcase = new BlockShowcase(this, "Hold", 1, false);
         gameStats = new GameStats();
         board = new Board(window, nextBlockShowcase, holdBlockShowcase, gameStats);
-        addKeyListener(board);
-        requestFocusInWindow();
-        
+
         pauseButton = new StyledButton("Pause");
         FontManager.setComponentFont(pauseButton);
         pauseButton.setPreferredSize(new Dimension(200, 0));
@@ -26,7 +24,6 @@ public class Game extends StyledPanel {
             public void actionPerformed(ActionEvent e)
             {
                 board.togglePause();
-                requestFocusInWindow();
             }
         });
 

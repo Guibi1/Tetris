@@ -64,15 +64,13 @@ public class Board extends StyledPanel implements KeyListener {
         isFirstBlock = true;
 
         Run();
-        RunBlockIndicator();
     }
 
     public void togglePause()
     {
-        gamePaused = !gamePaused;
-        
-        if (gamePaused)
+        if (!gamePaused)
         {
+            gamePaused = true;
             layout.show(this, "pause");
         }
         
@@ -83,12 +81,14 @@ public class Board extends StyledPanel implements KeyListener {
             resumeScheduler.shutdownNow();
             resumeScheduler = new ScheduledThreadPoolExecutor(1);
             resumeScheduler.schedule(new Thread(() -> Run()), 1200, TimeUnit.MILLISECONDS);
-            RunBlockIndicator();
         }
     }
 
     private void Run()
     {
+        gamePaused = false;
+        RunBlockIndicator();
+
         new Thread(() -> {
             while (!gameOver && !gamePaused)
             {

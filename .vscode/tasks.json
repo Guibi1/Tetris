@@ -4,7 +4,7 @@
 		{
             "label": "Build",
             "type": "shell",
-            "command": "gradlew.bat build",
+            "command": "${workspaceFolder}\\gradlew.bat build",
             "problemMatcher": [],
             "presentation": {
                 "close": true,

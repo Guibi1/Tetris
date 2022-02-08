@@ -39,7 +39,6 @@ public class GameStats extends StyledPanel {
 
         } catch (IOException e) {
             System.out.println("Can't read best score.");
-            e.printStackTrace();
         }
     }
 

@@ -14,6 +14,7 @@ public class Window extends JFrame {
     {
         menu = new Menu(this);
         settings = new Settings(this);
+        keySelector = new KeySelector(this);
         game = new Game(this);
 
         // Layout
@@ -23,6 +24,7 @@ public class Window extends JFrame {
 
         add(menu, "menu");
         add(settings, "settings");
+        add(keySelector, "keySelector");
         add(game, "game");
         
         // Window parameters
@@ -53,7 +55,12 @@ public class Window extends JFrame {
     public void showSettings()
     {
         layout.show(getContentPane(), "settings");
-        settings.requestFocusInWindow();
+    }
+
+    public void showKeySelector()
+    {
+        layout.show(getContentPane(), "keySelector");
+        keySelector.requestFocusInWindow();
     }
 
     public void newGame()
@@ -69,6 +76,7 @@ public class Window extends JFrame {
 
     private Menu menu;
     private Settings settings;
+    private KeySelector keySelector;
     private Game game;
 
     private CardLayout layout;

@@ -93,12 +93,12 @@ public class Board extends StyledPanel {
         InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
         inputMap.clear();
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "pause");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyPause.getValue(), 0), "pause");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyRight.getValue(), 0), "moveRight");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyLeft.getValue(), 0), "moveLeft");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyFall.getValue(), 0), "fall");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyHold.getValue(), 0), "hold");
-        inputMap.put(KeyStroke.getKeyStroke(settings.keyRotate.getValue(), 0), "rotate");
+        inputMap.put(KeyStroke.getKeyStroke(settings.pauseSetting.getValue(), 0), "pause");
+        inputMap.put(KeyStroke.getKeyStroke(settings.rightSetting.getValue(), 0), "moveRight");
+        inputMap.put(KeyStroke.getKeyStroke(settings.leftSetting.getValue(), 0), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke(settings.fallSetting.getValue(), 0), "fall");
+        inputMap.put(KeyStroke.getKeyStroke(settings.holdSetting.getValue(), 0), "hold");
+        inputMap.put(KeyStroke.getKeyStroke(settings.rotateSetting.getValue(), 0), "rotate");
 
         // Reset the gameBoard
         for (Blocks.Color[] a : gameBoard)

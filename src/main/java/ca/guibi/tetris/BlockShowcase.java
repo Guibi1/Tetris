@@ -14,7 +14,8 @@ import java.awt.Graphics2D;
 import java.awt.BasicStroke;
 
 
-public class BlockShowcase extends StyledPanel {
+public class BlockShowcase extends StyledPanel
+{
     BlockShowcase(Game game, String title, int maxBlockCount, boolean generateBlocks)
     {        
         this.game = game;
@@ -209,7 +210,7 @@ public class BlockShowcase extends StyledPanel {
 
                 for (Point p : block.getPoints(rotation))
                 {
-                    g2D.setColor(block.getJavaColor());
+                    g2D.setColor(block.getColor().getJavaColor());
                     g2D.fillRect(
                         p.x * blockSizePixel + offset.x,
                         p.y * blockSizePixel + offset.y,

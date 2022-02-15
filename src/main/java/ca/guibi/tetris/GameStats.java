@@ -1,7 +1,7 @@
 package ca.guibi.tetris;
 
-import java.nio.ByteBuffer;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
@@ -9,7 +9,8 @@ import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 
 
-public class GameStats extends StyledPanel {
+public class GameStats extends StyledPanel
+{
     GameStats()
     {
         // Layout

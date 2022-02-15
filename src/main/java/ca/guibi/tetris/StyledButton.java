@@ -9,8 +9,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 
-public class StyledButton extends JButton implements MouseListener {
-    public StyledButton(String text) {
+public class StyledButton extends JButton implements MouseListener
+{
+    StyledButton(String text)
+    {
         setText(text);
 
         setBackground(backgroundColor);
@@ -23,11 +25,11 @@ public class StyledButton extends JButton implements MouseListener {
     }
 
     @Override
-    public Dimension getPreferredSize() {
+    public Dimension getPreferredSize()
+    {
         return new Dimension(250, 60);
     }
-    
-    // MouseListener interface
+
     @Override
     public void mouseEntered(MouseEvent e)
     { 
@@ -36,7 +38,8 @@ public class StyledButton extends JButton implements MouseListener {
     }
 
     @Override
-    public void mouseExited(MouseEvent e) { 
+    public void mouseExited(MouseEvent e)
+    { 
         if (e.getSource() == this)
             this.setBackground(backgroundColor); 
     }
@@ -51,7 +54,6 @@ public class StyledButton extends JButton implements MouseListener {
     public void mousePressed(MouseEvent e) { return; }
 
 
-    // Properties
     private final Color hoverColor = Color.decode("#4F5CA8");
     private final Color backgroundColor = Color.decode("#243A81");
 }

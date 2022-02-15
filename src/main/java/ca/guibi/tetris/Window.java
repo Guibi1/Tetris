@@ -9,7 +9,8 @@ import java.awt.AWTKeyStroke;
 import java.awt.KeyboardFocusManager;
 
 
-public class Window extends JFrame {
+public class Window extends JFrame
+{
     Window()
     {
         menu = new Menu(this);

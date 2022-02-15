@@ -1,16 +1,14 @@
 package ca.guibi.tetris;
 
 import java.util.Arrays;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
 import javax.swing.JLabel;
+import javax.swing.InputMap;
 import javax.swing.KeyStroke;
+import javax.swing.ActionMap;
+import javax.swing.AbstractAction;
 import javax.swing.border.LineBorder;
 
 import java.awt.Color;
@@ -22,17 +20,19 @@ import java.awt.Graphics2D;
 import java.awt.CardLayout;
 import java.awt.BasicStroke;
 import java.awt.AlphaComposite;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
+import java.awt.event.ActionEvent;
 
 
-public class Board extends StyledPanel {
+public class Board extends StyledPanel
+{
     Board(Window window, BlockShowcase nextBlockShowcase, BlockShowcase holdBlockShowcase, GameStats statsPanel)
     {
         this.window = window;
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
-        settings = window.getSettings();
         resumeScheduler = new ScheduledThreadPoolExecutor(1);
 
         // Fill the gameBoard
@@ -90,6 +90,7 @@ public class Board extends StyledPanel {
     public void newGame()
     {
         // Set keybinds
+        Settings settings = window.getSettings();
         InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
         inputMap.clear();
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "pause");
@@ -587,7 +588,6 @@ public class Board extends StyledPanel {
 
 
     private Window window;
-    private Settings settings;
 
     public final int boardX = 10;
     public final int boardY = 20;
@@ -636,7 +636,7 @@ public class Board extends StyledPanel {
             for (Point p : currentBlock.getPoints(currentBlockRotation))
             {
                 // Draw current block
-                g2D.setColor(currentBlock.getJavaColor());
+                g2D.setColor(currentBlock.getColor().getJavaColor());
                 g2D.fill(new Rectangle2D.Double(
                     (p.x + currentBlockOffset.x) * width / boardX,
                     (p.y + currentBlockOffset.y) * height / boardY,
@@ -686,6 +686,7 @@ public class Board extends StyledPanel {
                 g2D.drawLine(0, i * height / boardY, width, i * height / boardY);
             }
         }
+
 
         private int strokeSize = 2;
     }

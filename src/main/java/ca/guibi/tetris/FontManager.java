@@ -12,7 +12,8 @@ import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
 
 
-public abstract class FontManager {
+public abstract class FontManager
+{
     public static boolean loadFont(String fontFile, Float defaultSize)
     {
         try

@@ -9,7 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class Menu extends StyledPanel {
+public class Menu extends StyledPanel
+{
     Menu(Window window)
     {
         titleLabel = new JLabel("Tetris");

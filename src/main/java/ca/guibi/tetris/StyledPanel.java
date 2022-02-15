@@ -5,7 +5,8 @@ import javax.swing.JPanel;
 import java.awt.Color;
 
 
-public class StyledPanel extends JPanel{
+public class StyledPanel extends JPanel
+{
     StyledPanel()
     {
         setBackground(backgroundColor);

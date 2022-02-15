@@ -16,7 +16,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class Settings extends StyledPanel {
+public class Settings extends StyledPanel
+{
     Settings(Window window)
     {
         this.window = window;

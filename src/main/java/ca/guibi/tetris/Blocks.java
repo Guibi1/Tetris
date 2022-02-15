@@ -6,7 +6,8 @@ import java.awt.Dimension;
 
 public final class Blocks
 {
-    public enum Type {
+    public enum Type
+    {
         I(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3) }, Color.Cyan),
         O(new Point[] { new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1) }, Color.Yellow),
         T(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1) }, Color.Purple),
@@ -16,28 +17,21 @@ public final class Blocks
         L(new Point[] { new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0) }, Color.Orange),
         None(new Point[0], Color.None);
 
-        private final Color color;
-        private final Point[] originalPoints;
-        
-        private Dimension lastSize;
-        private int lastAngle;
-        private Point[] lastPoints;
-
 
         Type(Point[] points, Color color)
         {
             this.color = color;
             lastSize = new Dimension();
             lastAngle = 0;
-            
+
             originalPoints = new Point[points.length];
             for (int i = 0; i< points.length; i++)
                 originalPoints[i] = new Point(points[i].x, points[i].y);
-            
+
             lastPoints = getRotatedPoints(lastAngle);
             updateSize(lastAngle);
         }
-        
+
         private void updateSize(int angle)
         {
             Point min = new Point(0, 0);
@@ -64,10 +58,10 @@ public final class Blocks
 
         private Point[] getRotatedPoints(int angle)
         {
-            // TODO: Rotate around central point
             Point origin = new Point(0, 0);
             Point[] newPoints = new Point[originalPoints.length];
 
+            // TODO: Rotate around central point
             // double rotationPoint = Math.max(getSize(angle).width, getSize(angle).height) / 2;
 
             for (int i = 0; i < originalPoints.length; i++)
@@ -114,13 +108,17 @@ public final class Blocks
             return color;
         }
 
-        public java.awt.Color getJavaColor()
-        {
-            return color.getJavaColor();
-        }
+
+        private final Color color;
+        private final Point[] originalPoints;
+
+        private Dimension lastSize;
+        private int lastAngle;
+        private Point[] lastPoints;
     }
-    
-    public enum Color {
+
+    public enum Color
+    {
         Cyan(java.awt.Color.cyan),
         Yellow(java.awt.Color.yellow),
         Purple(java.awt.Color.magenta),
@@ -130,7 +128,6 @@ public final class Blocks
         Orange(java.awt.Color.orange),
         None(java.awt.Color.black);
 
-        private final java.awt.Color color;
 
         Color(final java.awt.Color color)
         {
@@ -141,5 +138,7 @@ public final class Blocks
         {
             return color;
         }
+
+        private final java.awt.Color color;
     }
 }

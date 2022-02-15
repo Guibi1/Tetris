@@ -8,7 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class Game extends StyledPanel {
+public class Game extends StyledPanel
+{
     Game(Window window)
     {
         nextBlockShowcase = new BlockShowcase(this, "Next blocks", 3, true);

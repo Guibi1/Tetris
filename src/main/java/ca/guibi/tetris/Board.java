@@ -7,10 +7,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import javax.swing.JLabel;
 import javax.swing.InputMap;
 import javax.swing.KeyStroke;
 import javax.swing.ActionMap;
+import javax.swing.BoxLayout;
 import javax.swing.AbstractAction;
 import javax.swing.border.LineBorder;
 
@@ -26,6 +26,7 @@ import java.awt.AlphaComposite;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 
 public class Board extends StyledPanel
@@ -46,16 +47,42 @@ public class Board extends StyledPanel
         layout = new CardLayout();
         layout.setVgap(0);
         setLayout(layout);
-        
+
+        // Draw panel
         drawPanel = new DrawPanel();
         add(drawPanel, "game");
 
+        // Pause panel
         pausedPanel = new StyledPanel();
-        JLabel labelPause = new JLabel("Game paused");
-        FontManager.setComponentFont(labelPause, 50f);
-        pausedPanel.add(labelPause);
+        pausedPanel.setLayout(new BoxLayout(pausedPanel, BoxLayout.Y_AXIS));
+        StyledLabel pauseLabel = new StyledLabel("Game paused", 50f);
+        pauseLabel.setAlignmentX(CENTER_ALIGNMENT);
+        pausedPanel.add(pauseLabel);
+
+        StyledButton resumeButton = new StyledButton("Resume");
+        resumeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                togglePause();
+            }
+        });
+        resumeButton.setAlignmentX(CENTER_ALIGNMENT);
+        pausedPanel.add(resumeButton);
+
+        StyledButton quitButton = new StyledButton("Quit Game");
+        quitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                window.showMenu();
+            }
+        });
+        quitButton.setAlignmentX(CENTER_ALIGNMENT);
+        pausedPanel.add(quitButton);
         add(pausedPanel, "pause");
-        
+
+
         // Set actions
         ActionMap actionMap = getActionMap();
         actionMap.put("pause", new AbstractAction() {

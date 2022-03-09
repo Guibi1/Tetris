@@ -2,6 +2,9 @@ package ca.guibi.tetris;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.JLabel;
@@ -33,7 +36,7 @@ public class Board extends StyledPanel
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
-        resumeScheduler = new ScheduledThreadPoolExecutor(1);
+        schedulerBlockIndicator = new ScheduledThreadPoolExecutor(1);
 
         // Fill the gameBoard
         for (Blocks.Color[] a : gameBoard)
@@ -117,19 +120,19 @@ public class Board extends StyledPanel
 
     public void togglePause()
     {
-        if (!gamePaused)
+        gamePaused = !gamePaused;
+
+        if (gamePaused)
         {
-            gamePaused = true;
             layout.show(this, "pause");
+            scheduledFutureBlockIndicator.cancel(false);
         }
         
         else
         {
             layout.show(this, "game");
-            
-            resumeScheduler.shutdownNow();
-            resumeScheduler = new ScheduledThreadPoolExecutor(1);
-            resumeScheduler.schedule(new Thread(() -> Run()), 1200, TimeUnit.MILLISECONDS);
+            RunBlockIndicator();
+            Run(1200);
         }
     }
 
@@ -138,193 +141,181 @@ public class Board extends StyledPanel
         gamePaused = false;
         RunBlockIndicator();
 
-        new Thread(() -> {
-            while (!gameOver && !gamePaused)
-            {
-                // Checks for completed line
-                int clearedLines = 0;
-                for (int i = boardY - 1; i >= 0;)
-                {
-                    if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
-                    {
-                        Blocks.Color[] last = new Blocks.Color[10];
-                        Arrays.fill(last, Blocks.Color.None);
-                        
-                        for (int j = 0; j <= i; j++)
-                        {
-                            Blocks.Color[] temp = last;
-                            last = gameBoard[j];
-                            gameBoard[j] = temp;
-                        }
-        
-                        clearedLines += 1;
-                    }
+        Run(0);
+    }
 
-                    else i -= 1;
-                }
-
-                if (clearedLines > 0)
-                {
-                    // Give points based on the number of line completed
-                    switch (clearedLines) {
-                        case 1:
-                            gameStats.addScore(gameStats.getLevel() * 40);
-                            break;
-    
-                        case 2:
-                            gameStats.addScore(gameStats.getLevel() * 100);
-                            break;
-    
-                        case 3:
-                            gameStats.addScore(gameStats.getLevel() * 300);
-                            break;
-    
-                        default:
-                            gameStats.addScore(gameStats.getLevel() * 1200);
-                            break;
-                    }
-    
-                    gameStats.addLinesCleared(clearedLines);
-                    repaintBoard(true);
-                }
-
-                else
-                {
-                    // Adds a new block
-                    if (generateBlock)
-                    {
-                        generateBlock = false;
-                        currentBlock = nextBlockShowcase.getBlockAt(0);
-                        currentBlockRotation = nextBlockShowcase.getRotationAt(0);
-                        currentBlockOffset.setLocation((boardX - currentBlock.getSize(currentBlockRotation).width) / 2, 0 - currentBlock.getSize(currentBlockRotation).height);
-                        
-                        if (isFirstBlock)
-                        {
-                            nextBlockShowcase.removeBlockAt(0);
-                            isFirstBlock = false;
-                        }
-
-                        else
-                            nextBlockShowcase.removeFirstBlock();
-                        
-                        nextBlockShowcase.addRandomBlock();
-                        repaintBoard();
-                    }
-
-                    // Drags the block down if it can
-                    else
-                    {
-                        boolean canFall = true;
-                        for (Point p : currentBlock.getPoints(currentBlockRotation))
-                        {
-                            if (currentBlockOffset.y + p.y + 1 < 0)
-                                continue;
-                            
-                            if (currentBlockOffset.y + p.y == boardY - 1 || gameBoard[currentBlockOffset.y + p.y + 1][currentBlockOffset.x + p.x] != Blocks.Color.None)
-                                canFall = false;
-                        }
-
-                        if (canFall)
-                        {
-                            currentBlockOffset.translate(0, 1);
-                            repaintBoard();
-                        }
-                        
-                        else
-                        {
-                            // Check if game is over
-                            for (Point p : currentBlock.getPoints(currentBlockRotation))
-                            {
-                                if (currentBlockOffset.y + p.y < 0)
-                                    continue;
-
-                                if (currentBlockOffset.y + p.y <= 0)
-                                    gameOver = true;
-                                
-                                gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x] = currentBlock.getColor();
-                            }
-
-                            currentBlock = Blocks.Type.None;
-                            generateBlock = true;
-                            repaintBoard(true);
-                        }
-                    }
-                }
-                
-                // Sleep for a time based on the current level
-                try {
-                    Thread.sleep((gameStats.getLevel() < 150) ? Math.round(80 * Math.cos(gameStats.getLevel() / (15 * Math.PI)) + 120) : 40);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
+    private void Run(long delay)
+    {
+        scheduler.schedule(() -> {
             if (gameOver)
             {
+                scheduledFutureBlockIndicator.cancel(false);
                 gameStats.saveBestScore();
                 window.showMenu();
-
+                
                 // TODO: show an end screen
+                return;
             }
-        }).start();
+            if (gamePaused)
+                return;
+
+            // Checks for completed line
+            int clearedLines = 0;
+            for (int i = boardY - 1; i >= 0;)
+            {
+                if (!Arrays.stream(gameBoard[i]).anyMatch(Blocks.Color.None::equals))
+                {
+                    Blocks.Color[] last = new Blocks.Color[10];
+                    Arrays.fill(last, Blocks.Color.None);
+                    
+                    for (int j = 0; j <= i; j++)
+                    {
+                        Blocks.Color[] temp = last;
+                        last = gameBoard[j];
+                        gameBoard[j] = temp;
+                    }
+    
+                    clearedLines += 1;
+                }
+
+                else i -= 1;
+            }
+
+            if (clearedLines > 0)
+            {
+                // Give points based on the number of line completed
+                switch (clearedLines) {
+                    case 1:
+                        gameStats.addScore(gameStats.getLevel() * 40);
+                        break;
+
+                    case 2:
+                        gameStats.addScore(gameStats.getLevel() * 100);
+                        break;
+
+                    case 3:
+                        gameStats.addScore(gameStats.getLevel() * 300);
+                        break;
+
+                    default:
+                        gameStats.addScore(gameStats.getLevel() * 1200);
+                        break;
+                }
+
+                gameStats.addLinesCleared(clearedLines);
+                repaintBoard(true);
+            }
+
+            else
+            {
+                // Adds a new block
+                if (generateBlock)
+                {
+                    generateBlock = false;
+                    currentBlock = nextBlockShowcase.getBlockAt(0);
+                    rotationCurrentBlock = nextBlockShowcase.getRotationAt(0);
+                    offsetCurrentBlock.setLocation((boardX - currentBlock.getSize(rotationCurrentBlock).width) / 2, 0 - currentBlock.getSize(rotationCurrentBlock).height);
+                    
+                    if (isFirstBlock)
+                    {
+                        nextBlockShowcase.removeBlockAt(0);
+                        isFirstBlock = false;
+                    }
+
+                    else
+                        nextBlockShowcase.removeFirstBlock();
+                    
+                    nextBlockShowcase.addRandomBlock();
+                    repaintBoard();
+                }
+
+                // Drags the block down if it can
+                else
+                {
+                    boolean canFall = true;
+                    for (Point p : currentBlock.getPoints(rotationCurrentBlock))
+                    {
+                        if (offsetCurrentBlock.y + p.y + 1 < 0)
+                            continue;
+                        
+                        if (offsetCurrentBlock.y + p.y == boardY - 1 || gameBoard[offsetCurrentBlock.y + p.y + 1][offsetCurrentBlock.x + p.x] != Blocks.Color.None)
+                            canFall = false;
+                    }
+
+                    if (canFall)
+                    {
+                        offsetCurrentBlock.translate(0, 1);
+                        repaintBoard();
+                    }
+                    
+                    else
+                    {
+                        // Check if game is over
+                        for (Point p : currentBlock.getPoints(rotationCurrentBlock))
+                        {
+                            if (offsetCurrentBlock.y + p.y < 0)
+                                continue;
+
+                            if (offsetCurrentBlock.y + p.y <= 0)
+                                gameOver = true;
+                            
+                            gameBoard[offsetCurrentBlock.y + p.y][offsetCurrentBlock.x + p.x] = currentBlock.getColor();
+                        }
+
+                        currentBlock = Blocks.Type.None;
+                        generateBlock = true;
+                        repaintBoard(true);
+                    }
+                }
+            }
+
+            // Schedule next tick
+            Run(Math.round(160 / (1 + Math.pow(2.7, 0.05 * gameStats.getLevel() - 4)) + 40));
+        }, delay, TimeUnit.MILLISECONDS);
     }
 
     private void RunBlockIndicator()
     {
-        new Thread(() -> {
-            float minAlpha = 0.1f;
-            float maxAlpha = 0.4f;
-            boolean alphaGoingUp = true;
-            int animationTime = 400;
+        float maxAlpha = 0.4f;
+        float minAlpha = 0.1f;
+        int stepDelay = 20;
+        alphaBlockIndicator = minAlpha;
+        float steps = (maxAlpha - minAlpha) / stepDelay;
 
-            int stepsTiming = animationTime / 20;
-            float steps = (maxAlpha - minAlpha) / stepsTiming;
-            alphaBlockIndicator = minAlpha;
-            
-            while (!gameOver && !gamePaused)
+        scheduledFutureBlockIndicator = schedulerBlockIndicator.scheduleAtFixedRate(() -> {
+            if (isAlphaIncreasing)
             {
-                // If the alpha needs to go up
-                if (alphaGoingUp)
+                alphaBlockIndicator += steps;
+
+                if (alphaBlockIndicator >= maxAlpha)
                 {
-                    alphaBlockIndicator += steps;
-
-                    if (alphaBlockIndicator >= maxAlpha)
-                    {
-                        alphaGoingUp = false;
-                        alphaBlockIndicator = maxAlpha;
-                    }
-                }
-                
-                // If the alpha needs to go down
-                else
-                {
-                    alphaBlockIndicator -= steps;
-
-                    if (alphaBlockIndicator <= minAlpha)
-                    {
-                        alphaGoingUp = true;
-                        alphaBlockIndicator = minAlpha;
-                    }
-                }
-
-                // Repaint the indicator
-                java.awt.EventQueue.invokeLater(new Thread(() -> 
-                    drawPanel.paintImmediately(
-                        blockIndicatorOffset.x * drawPanel.getSize().width / boardX,
-                        blockIndicatorOffset.y * drawPanel.getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
-                    )
-                ));
-                
-                // Sleep until next alpha update
-                try {
-                    Thread.sleep(stepsTiming);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+                    isAlphaIncreasing = false;
+                    alphaBlockIndicator = maxAlpha;
                 }
             }
-        }).start();
+            
+            // If the alpha needs to go down
+            else
+            {
+                alphaBlockIndicator -= steps;
+
+                if (alphaBlockIndicator <= minAlpha)
+                {
+                    isAlphaIncreasing = true;
+                    alphaBlockIndicator = minAlpha;
+                }
+            }
+
+            // Repaint the indicator
+            java.awt.EventQueue.invokeLater(new Thread(() -> 
+                drawPanel.paintImmediately(
+                    offsetBlockIndicator.x * drawPanel.getSize().width / boardX,
+                    offsetBlockIndicator.y * drawPanel.getSize().height / boardY,
+                    currentBlock.getSize(rotationCurrentBlock).width * drawPanel.getSize().width / boardX,
+                    currentBlock.getSize(rotationCurrentBlock).height * drawPanel.getSize().height / boardY
+                )
+            ));
+        }, 0, stepDelay, TimeUnit.MILLISECONDS);
     }
 
     private void moveCurrentBlockRight()
@@ -334,24 +325,24 @@ public class Board extends StyledPanel
             return;
 
         boolean canMove = true;
-        for (Point p : currentBlock.getPoints(currentBlockRotation))
+        for (Point p : currentBlock.getPoints(rotationCurrentBlock))
         {
             // Can't move to the right if it makes it move outside of the board
-            if (currentBlockOffset.x + p.x >= boardX - 1)
+            if (offsetCurrentBlock.x + p.x >= boardX - 1)
                 canMove = false;
 
             // Ignore the point if it is too high up
-            else if (currentBlockOffset.y + p.y < 0)
+            else if (offsetCurrentBlock.y + p.y < 0)
                 continue;
             
             // Check if the point at the right isn't empty
-            else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x + 1] != Blocks.Color.None)
+            else if (gameBoard[offsetCurrentBlock.y + p.y][offsetCurrentBlock.x + p.x + 1] != Blocks.Color.None)
                 canMove = false;
         }
         
         if (canMove)
         {
-            currentBlockOffset.translate(1, 0);
+            offsetCurrentBlock.translate(1, 0);
             repaintBoard();
         }
     }
@@ -363,24 +354,24 @@ public class Board extends StyledPanel
             return;
             
         boolean canMove = true;
-        for (Point p : currentBlock.getPoints(currentBlockRotation))
+        for (Point p : currentBlock.getPoints(rotationCurrentBlock))
         {
             // Can't move to the left if it makes it move out of the board
-            if (currentBlockOffset.x + p.x <= 0)
+            if (offsetCurrentBlock.x + p.x <= 0)
                 canMove = false;
             
             // Ignore the point if it is too high up
-            else if (currentBlockOffset.y + p.y < 0)
+            else if (offsetCurrentBlock.y + p.y < 0)
                 continue;
 
             // Check if the point at the left isn't empty
-            else if (gameBoard[currentBlockOffset.y + p.y][currentBlockOffset.x + p.x - 1] != Blocks.Color.None)
+            else if (gameBoard[offsetCurrentBlock.y + p.y][offsetCurrentBlock.x + p.x - 1] != Blocks.Color.None)
                 canMove = false;
         }
         
         if (canMove)
         {
-            currentBlockOffset.translate(-1, 0);
+            offsetCurrentBlock.translate(-1, 0);
             repaintBoard();
         }
     }
@@ -391,8 +382,8 @@ public class Board extends StyledPanel
         if (gameOver || gamePaused)
             return;
             
-        int blocksFallen = blockIndicatorOffset.y - currentBlockOffset.y;
-        currentBlockOffset.setLocation(blockIndicatorOffset);
+        int blocksFallen = offsetBlockIndicator.y - offsetCurrentBlock.y;
+        offsetCurrentBlock.setLocation(offsetBlockIndicator);
 
         if (blocksFallen >= 5)
             gameStats.addScore(blocksFallen * 2);
@@ -407,21 +398,21 @@ public class Board extends StyledPanel
             return;
             
         // Breaks if the rotation makes the block go outside of the board on the Y axis
-        if (currentBlockOffset.y + currentBlock.getSize(currentBlockRotation + 90).height > boardY - 1)
+        if (offsetCurrentBlock.y + currentBlock.getSize(rotationCurrentBlock + 90).height > boardY - 1)
             return;
 
         // Shifts the block to the left if it goes outside of the screen to the right
-        int newX = Math.min(currentBlockOffset.x, boardX - currentBlock.getSize(currentBlockRotation + 90).width);
+        int newX = Math.min(offsetCurrentBlock.x, boardX - currentBlock.getSize(rotationCurrentBlock + 90).width);
 
         boolean canMove = true;
-        for (Point p : currentBlock.getPoints(currentBlockRotation + 90))
+        for (Point p : currentBlock.getPoints(rotationCurrentBlock + 90))
         {
             // Ignore the point if it is too high
-            if (currentBlockOffset.y + p.y < 0)
+            if (offsetCurrentBlock.y + p.y < 0)
                 continue;
 
             // Checks if the rotated point isn't empty
-            if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
+            if (gameBoard[offsetCurrentBlock.y + p.y][newX + p.x] != Blocks.Color.None)
                 canMove = false;
         }
 
@@ -429,8 +420,8 @@ public class Board extends StyledPanel
 
         if (canMove)
         {
-            currentBlockRotation += 90;
-            currentBlockOffset.x = newX;
+            rotationCurrentBlock += 90;
+            offsetCurrentBlock.x = newX;
             repaintBoard(true);
         }
     }
@@ -448,25 +439,25 @@ public class Board extends StyledPanel
         // If there is no holded block
         if (holdBlockShowcase.getBlockAt(0) == Blocks.Type.None)
         {
-            holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
+            holdBlockShowcase.addBlock(currentBlock, rotationCurrentBlock);
             generateBlock = true;
         }
 
         else
         {
             // Shifts the block to the left if it goes outside of the screen to the right
-            int newX = Math.min(currentBlockOffset.x, boardX - holdBlockShowcase.getBlockAt(0).getSize(holdBlockShowcase.getRotationAt(0)).width);
+            int newX = Math.min(offsetCurrentBlock.x, boardX - holdBlockShowcase.getBlockAt(0).getSize(holdBlockShowcase.getRotationAt(0)).width);
             
             // Test if the holded block's points can fit in the game
             boolean canSwitch = true;
             for (Point p : holdBlockShowcase.getBlockAt(0).getPoints(holdBlockShowcase.getRotationAt(0)))
             {
                 // Ignore the point if it is too high
-                if (currentBlockOffset.y + p.y < 0)
+                if (offsetCurrentBlock.y + p.y < 0)
                     continue;
                 
                 // Checks if the switched point isn't empty
-                if (gameBoard[currentBlockOffset.y + p.y][newX + p.x] != Blocks.Color.None)
+                if (gameBoard[offsetCurrentBlock.y + p.y][newX + p.x] != Blocks.Color.None)
                     canSwitch = false;
             }
 
@@ -479,11 +470,11 @@ public class Board extends StyledPanel
                 int tempRotation = holdBlockShowcase.getRotationAt(0);
 
                 holdBlockShowcase.removeBlockAt(0);
-                holdBlockShowcase.addBlock(currentBlock, currentBlockRotation);
+                holdBlockShowcase.addBlock(currentBlock, rotationCurrentBlock);
                 
                 currentBlock = tempBlock;
-                currentBlockRotation = tempRotation;
-                currentBlockOffset.x = newX;
+                rotationCurrentBlock = tempRotation;
+                offsetCurrentBlock.x = newX;
                 
                 repaintBoard(true);
             }
@@ -509,31 +500,31 @@ public class Board extends StyledPanel
     private void repaintBoard(boolean paintAll)
     {
         // Finds where the block will fall
-        Point oldIndicatorOffset = new Point(blockIndicatorOffset);
-        blockIndicatorOffset = new Point(currentBlockOffset);
+        Point oldIndicatorOffset = new Point(offsetBlockIndicator);
+        offsetBlockIndicator = new Point(offsetCurrentBlock);
         boolean canFall = true;
 
         // Repeat as long as the indicator block fell
         while (currentBlock != Blocks.Type.None && canFall)
         {
-            for (Point p : currentBlock.getPoints(currentBlockRotation))
+            for (Point p : currentBlock.getPoints(rotationCurrentBlock))
             {
                 // Ignore the point if it is outside of the board
-                if (blockIndicatorOffset.x + p.x < 0 || blockIndicatorOffset.x  + p.x > boardX - 1)
+                if (offsetBlockIndicator.x + p.x < 0 || offsetBlockIndicator.x  + p.x > boardX - 1)
                     continue;
                 
                 // Ignore the point if it is too high up to be in the board
-                if (blockIndicatorOffset.y + p.y + 1 < 0)
+                if (offsetBlockIndicator.y + p.y + 1 < 0)
                     continue;
                 
                 // The block can't fall if the point under it isn't empty
-                if (blockIndicatorOffset.y + p.y >= boardY - 1 || gameBoard[blockIndicatorOffset.y + p.y + 1][blockIndicatorOffset.x + p.x] != Blocks.Color.None)
+                if (offsetBlockIndicator.y + p.y >= boardY - 1 || gameBoard[offsetBlockIndicator.y + p.y + 1][offsetBlockIndicator.x + p.x] != Blocks.Color.None)
                     canFall = false;
             }
             
             // Drags down the block indicator by 1
             if (canFall)
-                blockIndicatorOffset.translate(0, 1);
+                offsetBlockIndicator.translate(0, 1);
         }
         
         // Repaints all the board
@@ -541,32 +532,32 @@ public class Board extends StyledPanel
             java.awt.EventQueue.invokeLater(new Thread(() -> drawPanel.paintImmediately(0, 0, drawPanel.getSize().width, drawPanel.getSize().height)));
         
         // Repaint the indicator if it moved
-        else if (oldIndicatorOffset != blockIndicatorOffset)
+        else if (oldIndicatorOffset != offsetBlockIndicator)
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->
                 {
                     // Repaints around the current block
                     drawPanel.repaint(
-                        (currentBlockOffset.x - 2) * drawPanel.getSize().width / boardX,
-                        (currentBlockOffset.y - 2) * drawPanel.getSize().height / boardY,
-                        (currentBlock.getSize(currentBlockRotation).width + 4) * drawPanel.getSize().width / boardX,
-                        (currentBlock.getSize(currentBlockRotation).height + 4) * drawPanel.getSize().height / boardY
+                        (offsetCurrentBlock.x - 2) * drawPanel.getSize().width / boardX,
+                        (offsetCurrentBlock.y - 2) * drawPanel.getSize().height / boardY,
+                        (currentBlock.getSize(rotationCurrentBlock).width + 4) * drawPanel.getSize().width / boardX,
+                        (currentBlock.getSize(rotationCurrentBlock).height + 4) * drawPanel.getSize().height / boardY
                     );
 
                     // Repaints where the block indicator was
                     drawPanel.repaint(
                         oldIndicatorOffset.x * drawPanel.getSize().width / boardX,
                         oldIndicatorOffset.y * drawPanel.getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
+                        currentBlock.getSize(rotationCurrentBlock).width * drawPanel.getSize().width / boardX,
+                        currentBlock.getSize(rotationCurrentBlock).height * drawPanel.getSize().height / boardY
                     );
 
                     // Repaints the block indicator
                     drawPanel.paintImmediately(
-                        blockIndicatorOffset.x * drawPanel.getSize().width / boardX,
-                        blockIndicatorOffset.y * drawPanel.getSize().height / boardY,
-                        currentBlock.getSize(currentBlockRotation).width * drawPanel.getSize().width / boardX,
-                        currentBlock.getSize(currentBlockRotation).height * drawPanel.getSize().height / boardY
+                        offsetBlockIndicator.x * drawPanel.getSize().width / boardX,
+                        offsetBlockIndicator.y * drawPanel.getSize().height / boardY,
+                        currentBlock.getSize(rotationCurrentBlock).width * drawPanel.getSize().width / boardX,
+                        currentBlock.getSize(rotationCurrentBlock).height * drawPanel.getSize().height / boardY
                     );
                 }
             ));
@@ -577,43 +568,45 @@ public class Board extends StyledPanel
         {
             java.awt.EventQueue.invokeLater(new Thread(() ->
                 drawPanel.repaint(
-                    (currentBlockOffset.x - 2) * drawPanel.getSize().width / boardX,
-                    (currentBlockOffset.y - 2) * drawPanel.getSize().height / boardY,
-                    (currentBlock.getSize(currentBlockRotation).width + 4) * drawPanel.getSize().width / boardX,
-                    (currentBlock.getSize(currentBlockRotation).height + 4) * drawPanel.getSize().height / boardY
+                    (offsetCurrentBlock.x - 2) * drawPanel.getSize().width / boardX,
+                    (offsetCurrentBlock.y - 2) * drawPanel.getSize().height / boardY,
+                    (currentBlock.getSize(rotationCurrentBlock).width + 4) * drawPanel.getSize().width / boardX,
+                    (currentBlock.getSize(rotationCurrentBlock).height + 4) * drawPanel.getSize().height / boardY
                 )
             ));
         }
     }
 
 
-    private Window window;
+    private final Window window;
 
     public final int boardX = 10;
     public final int boardY = 20;
 
-    private CardLayout layout;
-    private DrawPanel drawPanel;
     private Blocks.Color[][] gameBoard = new Blocks.Color[boardY][boardX];
-
-    private StyledPanel pausedPanel;
-    private ScheduledThreadPoolExecutor resumeScheduler;
-
     private boolean gamePaused = false;
     private boolean gameOver = false;
-
     private boolean generateBlock = true;
     private boolean isFirstBlock = true;
+
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private Blocks.Type currentBlock = Blocks.Type.None;
+    private int rotationCurrentBlock = 0;
+    private Point offsetCurrentBlock = new Point(0, 0);
+
+    private ScheduledExecutorService schedulerBlockIndicator = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> scheduledFutureBlockIndicator;
+    private Point offsetBlockIndicator = new Point(0, 0);
+    private float alphaBlockIndicator = 0f;
+    private boolean isAlphaIncreasing = true;
+
+    // GUI
+    private final CardLayout layout;
+    private final StyledPanel pausedPanel;
     private final BlockShowcase nextBlockShowcase;
     private final BlockShowcase holdBlockShowcase;
     private final GameStats gameStats;
-
-    private Blocks.Type currentBlock = Blocks.Type.None;
-    private int currentBlockRotation = 0;
-    private Point currentBlockOffset = new Point(0, 0);
-
-    private Point blockIndicatorOffset = new Point(0, 0);
-    private float alphaBlockIndicator = 0f;
+    private final DrawPanel drawPanel;
 
 
     private class DrawPanel extends StyledPanel
@@ -633,13 +626,13 @@ public class Board extends StyledPanel
             int width = getSize().width;
             int height = getSize().height;
 
-            for (Point p : currentBlock.getPoints(currentBlockRotation))
+            for (Point p : currentBlock.getPoints(rotationCurrentBlock))
             {
                 // Draw current block
                 g2D.setColor(currentBlock.getColor().getJavaColor());
                 g2D.fill(new Rectangle2D.Double(
-                    (p.x + currentBlockOffset.x) * width / boardX,
-                    (p.y + currentBlockOffset.y) * height / boardY,
+                    (p.x + offsetCurrentBlock.x) * width / boardX,
+                    (p.y + offsetCurrentBlock.y) * height / boardY,
                     width / boardX,
                     height / boardY
                 ));
@@ -647,8 +640,8 @@ public class Board extends StyledPanel
                 // Draw current block indicator
                 g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaBlockIndicator));
                 g2D.fill(new Rectangle2D.Double(
-                    (p.x + blockIndicatorOffset.x) * width / boardX,
-                    (p.y + blockIndicatorOffset.y) * height / boardY,
+                    (p.x + offsetBlockIndicator.x) * width / boardX,
+                    (p.y + offsetBlockIndicator.y) * height / boardY,
                     width / boardX,
                     height / boardY
                 ));
@@ -677,14 +670,10 @@ public class Board extends StyledPanel
             g2D.setStroke(new BasicStroke(strokeSize));
             g2D.setColor(Color.decode("#373D43"));
             for (int i = 1; i <= boardX; i++)
-            {
                 g2D.drawLine(i * width / boardX, 0, i * width / boardX, height);
-            }
             
             for (int i = 1; i <= boardY; i++)
-            {
                 g2D.drawLine(0, i * height / boardY, width, i * height / boardY);
-            }
         }
 
 

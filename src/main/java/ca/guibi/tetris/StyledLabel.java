@@ -5,15 +5,21 @@ import javax.swing.JLabel;
 
 public class StyledLabel extends JLabel
 {
+    StyledLabel()
+    {
+        super();
+        FontManager.setComponentFont(this);
+    }
+
     StyledLabel(String text)
     {
-        setText(text);
+        super(text);
         FontManager.setComponentFont(this);
     }
 
     StyledLabel(String text, Float fontSize)
     {
-        setText(text);
+        super(text);
         FontManager.setComponentFont(this, fontSize);
     }
 }

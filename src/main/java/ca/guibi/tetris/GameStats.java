@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
-import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 
 
@@ -16,15 +15,13 @@ public class GameStats extends StyledPanel
         // Layout
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
-        scoreLabel = new JLabel();
-        scoreLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-        FontManager.setComponentFont(scoreLabel);
+        scoreLabel = new StyledLabel();
+        scoreLabel.setAlignmentX(CENTER_ALIGNMENT);
         setScore(0);
         add(scoreLabel);
         
-        bestScoreLabel = new JLabel();
-        bestScoreLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-        FontManager.setComponentFont(bestScoreLabel);
+        bestScoreLabel = new StyledLabel();
+        bestScoreLabel.setAlignmentX(CENTER_ALIGNMENT);
         setBestScore(0);
         add(bestScoreLabel);
 
@@ -112,8 +109,8 @@ public class GameStats extends StyledPanel
     private int linesClearedCount = 0;
 
     private int score = 0;
-    private JLabel scoreLabel;
+    private StyledLabel scoreLabel;
 
     private int bestScore = 0;
-    private JLabel bestScoreLabel;
+    private StyledLabel bestScoreLabel;
 }

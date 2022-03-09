@@ -17,8 +17,7 @@ public class Game extends StyledPanel
         gameStats = new GameStats();
         board = new Board(window, nextBlockShowcase, holdBlockShowcase, gameStats);
 
-        pauseButton = new StyledButton("Pause");
-        FontManager.setComponentFont(pauseButton);
+        StyledButton pauseButton = new StyledButton("Pause");
         pauseButton.setPreferredSize(new Dimension(200, 0));
         pauseButton.addActionListener(new ActionListener() {
             @Override
@@ -79,8 +78,6 @@ public class Game extends StyledPanel
         return 30;
     }
 
-
-    private StyledButton pauseButton;
 
     private Board board;
     private BlockShowcase nextBlockShowcase;

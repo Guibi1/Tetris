@@ -3,7 +3,6 @@ package ca.guibi.tetris;
 import java.util.Random;
 import java.util.Vector;
 
-import javax.swing.JLabel;
 import javax.swing.BoxLayout;
 
 import java.awt.Color;
@@ -24,9 +23,8 @@ public class BlockShowcase extends StyledPanel
         // blockCount can't be less than 1
         this.maxBlockCount = Math.max(1, maxBlockCount);
         
-        titleLabel = new JLabel(title);
-        titleLabel.setAlignmentX(JLabel.CENTER_ALIGNMENT);
-        FontManager.setComponentFont(titleLabel);
+        StyledLabel titleLabel = new StyledLabel(title);
+        titleLabel.setAlignmentX(CENTER_ALIGNMENT);
 
         drawPanel = new DrawPanel();
         
@@ -126,7 +124,6 @@ public class BlockShowcase extends StyledPanel
     private final int maxBlockCount;
     private final Game game;
     
-    private JLabel titleLabel;
     private DrawPanel drawPanel;
     
     private Random random = new Random(System.currentTimeMillis());

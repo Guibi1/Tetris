@@ -1,6 +1,5 @@
 package ca.guibi.tetris;
 
-import javax.swing.JLabel;
 import javax.swing.GroupLayout;
 
 import java.awt.Dimension;
@@ -13,11 +12,9 @@ public class Menu extends StyledPanel
 {
     Menu(Window window)
     {
-        titleLabel = new JLabel("Tetris");
-        FontManager.setComponentFont(titleLabel, 160f);
+        StyledLabel titleLabel = new StyledLabel("Tetris", 160f);
 
-        startButton = new StyledButton("New game");
-        FontManager.setComponentFont(startButton);
+        StyledButton startButton = new StyledButton("New game");
         startButton.setPreferredSize(new Dimension(200, 0));
         startButton.addActionListener(new ActionListener() {
             @Override
@@ -28,8 +25,7 @@ public class Menu extends StyledPanel
             }
         });
         
-        settingsButton = new StyledButton("Settings");
-        FontManager.setComponentFont(settingsButton);
+        StyledButton settingsButton = new StyledButton("Settings");
         settingsButton.setPreferredSize(new Dimension(200, 0));
         settingsButton.addActionListener(new ActionListener() {
             @Override
@@ -39,8 +35,7 @@ public class Menu extends StyledPanel
             }
         });
 
-        quitButton = new StyledButton("Quit");
-        FontManager.setComponentFont(quitButton);
+        StyledButton quitButton = new StyledButton("Quit");
         quitButton.setPreferredSize(new Dimension(200, 0));
         quitButton.addActionListener(new ActionListener() {
             @Override
@@ -78,10 +73,4 @@ public class Menu extends StyledPanel
                 .addComponent(quitButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
         );
     }
-
-
-    private JLabel titleLabel;
-    private StyledButton startButton;
-    private StyledButton settingsButton;
-    private StyledButton quitButton;
 }

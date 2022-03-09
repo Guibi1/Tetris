@@ -10,7 +10,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.swing.InputMap;
 import javax.swing.KeyStroke;
 import javax.swing.ActionMap;
-import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
 import javax.swing.AbstractAction;
 import javax.swing.border.LineBorder;
 
@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.CardLayout;
 import java.awt.BasicStroke;
+import java.awt.GridBagLayout;
 import java.awt.AlphaComposite;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
@@ -48,38 +49,10 @@ public class Board extends StyledPanel
         layout.setVgap(0);
         setLayout(layout);
 
-        // Draw panel
         drawPanel = new DrawPanel();
         add(drawPanel, "game");
 
-        // Pause panel
-        pausedPanel = new StyledPanel();
-        pausedPanel.setLayout(new BoxLayout(pausedPanel, BoxLayout.Y_AXIS));
-        StyledLabel pauseLabel = new StyledLabel("Game paused", 50f);
-        pauseLabel.setAlignmentX(CENTER_ALIGNMENT);
-        pausedPanel.add(pauseLabel);
-
-        StyledButton resumeButton = new StyledButton("Resume");
-        resumeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                togglePause();
-            }
-        });
-        resumeButton.setAlignmentX(CENTER_ALIGNMENT);
-        pausedPanel.add(resumeButton);
-
-        StyledButton quitButton = new StyledButton("Quit Game");
-        quitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                window.showMenu();
-            }
-        });
-        quitButton.setAlignmentX(CENTER_ALIGNMENT);
-        pausedPanel.add(quitButton);
+        pausedPanel = new PausePanel();
         add(pausedPanel, "pause");
 
 
@@ -705,5 +678,62 @@ public class Board extends StyledPanel
 
 
         private int strokeSize = 2;
+    }
+
+
+    private class PausePanel extends StyledPanel
+    {
+        PausePanel()
+        {
+            // GUI
+            StyledLabel titleLabel = new StyledLabel("Game paused", 50f);
+            titleLabel.setAlignmentX(CENTER_ALIGNMENT);
+
+            StyledButton resumeButton = new StyledButton("Resume");
+            resumeButton.setPreferredSize(new Dimension(200, 0));
+            resumeButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    togglePause();
+                }
+            });
+    
+            StyledButton quitButton = new StyledButton("Quit Game");
+            quitButton.setPreferredSize(new Dimension(200, 0));
+            quitButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    window.showMenu();
+                }
+            });
+
+            // Layout
+            StyledPanel centeredPanel = new StyledPanel();
+            GroupLayout layout = new GroupLayout(centeredPanel);
+            centeredPanel.setLayout(layout);
+            setLayout(new GridBagLayout());
+            add(centeredPanel);
+
+            layout.setAutoCreateGaps(true);
+            layout.setAutoCreateContainerGaps(true);
+
+            layout.setHorizontalGroup(
+                layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(titleLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addGap(40)
+                    .addComponent(resumeButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(quitButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+            );
+            
+            layout.setVerticalGroup(
+                layout.createSequentialGroup()
+                    .addComponent(titleLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addGap(40)
+                    .addComponent(resumeButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(quitButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+            );
+        }
     }
 }

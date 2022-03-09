@@ -2,10 +2,7 @@ package ca.guibi.tetris;
 
 import javax.swing.GroupLayout;
 
-import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 
 public class Game extends StyledPanel
@@ -16,16 +13,6 @@ public class Game extends StyledPanel
         holdBlockShowcase = new BlockShowcase(this, "Hold", 1, false);
         gameStats = new GameStats();
         board = new Board(window, nextBlockShowcase, holdBlockShowcase, gameStats);
-
-        StyledButton pauseButton = new StyledButton("Pause");
-        pauseButton.setPreferredSize(new Dimension(200, 0));
-        pauseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                board.togglePause();
-            }
-        });
 
         // Layout
         StyledPanel centeredPanel = new StyledPanel();
@@ -40,7 +27,6 @@ public class Game extends StyledPanel
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
                 .addGap(20)
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -55,7 +41,6 @@ public class Game extends StyledPanel
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(holdBlockShowcase, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(gameStats, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pauseButton, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                 )
                 .addGap(20)
                 .addComponent(board, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)

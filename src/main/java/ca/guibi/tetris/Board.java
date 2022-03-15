@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.swing.InputMap;
 import javax.swing.KeyStroke;
@@ -38,7 +37,6 @@ public class Board extends StyledPanel
         this.nextBlockShowcase = nextBlockShowcase;
         this.holdBlockShowcase = holdBlockShowcase;
         this.gameStats = statsPanel;
-        schedulerBlockIndicator = new ScheduledThreadPoolExecutor(1);
 
         // Fill the gameBoard
         for (Blocks.Color[] a : gameBoard)
